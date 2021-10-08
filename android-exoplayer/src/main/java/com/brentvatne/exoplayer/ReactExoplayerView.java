@@ -238,7 +238,7 @@ class ReactExoplayerView extends FrameLayout implements
 
         addView(exoPlayerView, 0, layoutParams);
 
-        adsLoader = new ImaAdsLoader.Builder(getContext()).build();
+        adsLoader = new ImaAdsLoader.Builder(getContext()).setAdEventListener(this).build();
 
         mainHandler = new Handler();
     }
@@ -469,12 +469,6 @@ class ReactExoplayerView extends FrameLayout implements
                     // TODO: media item
                     MediaItem mediaItem = new MediaItem.Builder().setUri(srcUri)
                             .setAdTagUri(adTagUrl).build();
-
-                    if (adTagUrl != null) {
-                        Log.d("JOZ", "init adTagUrl=" + adTagUrl);
-                    } else {
-                        Log.d("JOZ", "init adTagUrl=null");
-                    }
 
                     //ArrayList<MediaSource> mediaSourceList = buildTextSources();
                     //MediaSource videoSource = buildMediaSource(srcUri, extension, drmSessionManager);
@@ -1084,7 +1078,6 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setAdTagUrl(final Uri uri) {
         this.adTagUrl = uri;
-        Log.d("JOZ", "setAdTagUrl");
     }
 
     public void setRawSrc(final Uri uri, final String extension) {
