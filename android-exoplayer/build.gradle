@@ -26,6 +26,10 @@ android {
     }
 }
 
+repositories {
+    maven { url  "https://npaw.jfrog.io/artifactory/youbora/" }
+}
+
 dependencies {
     implementation "com.facebook.react:react-native:${safeExtGet('reactNativeVersion', '+')}"
     def exoplayerVersion = '2.13.3'
@@ -46,4 +50,7 @@ dependencies {
 
     implementation 'com.squareup.okhttp3:okhttp:${OKHTTP_VERSION}'
 
+    // youbora
+    implementation 'com.nicepeopleatwork:configutil:0.4.7'
+    implementation "com.nicepeopleatwork:exoplayer-adapter:6.7.23"
 }

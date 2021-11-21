@@ -71,6 +71,16 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_SELECTED_VIDEO_TRACK_VALUE = "value";
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
+    // youbora
+    private static final String PROP_YOUBORA = "youbora";
+    private static final String PROP_YOUBORA_ACCOUNTCODE = "accountCode";
+    private static final String PROP_YOUBORA_TITLE = "title";
+    private static final String PROP_YOUBORA_APPNAME = "appName";
+    private static final String PROP_YOUBORA_APPRELEASEVERSION = "appReleaseVersion";
+    private static final String PROP_YOUBORA_IS_LIVE = "isLive";
+    private static final String PROP_YOUBORA_USERNAME = "username";
+    private static final String PROP_YOUBORA_PROGRAM = "program";
+    private static final String PROP_YOUBORA_CUSTOMDIMENSION1 = "customDimension1";
 
     private ReactExoplayerConfig config;
 
@@ -347,6 +357,13 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
             bufferForPlaybackAfterRebufferMs = bufferConfig.hasKey(PROP_BUFFER_CONFIG_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS)
                     ? bufferConfig.getInt(PROP_BUFFER_CONFIG_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS) : bufferForPlaybackAfterRebufferMs;
             videoView.setBufferConfig(minBufferMs, maxBufferMs, bufferForPlaybackMs, bufferForPlaybackAfterRebufferMs);
+        }
+    }
+
+    @ReactProp(name = PROP_YOUBORA)
+    public void setYoubora(final ReactExoplayerView videoView, @Nullable ReadableMap youbora) {
+        if (youbora != null) {
+            videoView.setYoubora(youbora);
         }
     }
 

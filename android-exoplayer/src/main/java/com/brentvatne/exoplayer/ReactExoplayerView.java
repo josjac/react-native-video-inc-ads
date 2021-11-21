@@ -79,6 +79,12 @@ import com.google.ads.interactivemedia.v3.api.AdEvent;
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
 import com.google.android.exoplayer2.source.MediaSourceFactory;
 
+import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
+import com.npaw.youbora.lib6.plugin.Options;
+import com.npaw.youbora.lib6.plugin.Plugin;
+import com.npaw.youbora.lib6.utils.youboraconfigutils.YouboraConfigManager;
+import com.npaw.youbora.lib6.YouboraLog;
+
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
@@ -86,6 +92,8 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements
@@ -143,6 +151,16 @@ class ReactExoplayerView extends FrameLayout implements
     private int bufferForPlaybackMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS;
     private int bufferForPlaybackAfterRebufferMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS;
 
+    private Plugin youboraPlugin;
+    private static final String PROP_YOUBORA_ACCOUNTCODE = "accountCode";
+    private static final String PROP_YOUBORA_TITLE = "title";
+    private static final String PROP_YOUBORA_APPNAME = "appName";
+    private static final String PROP_YOUBORA_APPRELEASEVERSION = "appReleaseVersion";
+    private static final String PROP_YOUBORA_IS_LIVE = "isLive";
+    private static final String PROP_YOUBORA_USERNAME = "username";
+    private static final String PROP_YOUBORA_PROGRAM = "program";
+    private static final String PROP_YOUBORA_CUSTOMDIMENSION1 = "customDimension1";
+
     private Handler mainHandler;
 
     // Props from React
@@ -167,6 +185,7 @@ class ReactExoplayerView extends FrameLayout implements
     private String[] drmLicenseHeader = null;
     private boolean controls;
     private Uri adTagUrl;
+    private ReadableMap youboraConfig;
     // \ End props
 
     // React
@@ -445,6 +464,50 @@ class ReactExoplayerView extends FrameLayout implements
 
                     PlaybackParameters params = new PlaybackParameters(rate, 1f);
                     player.setPlaybackParameters(params);
+
+                    // TODO: youbora
+                    YouboraLog.setDebugLevel(YouboraLog.Level.VERBOSE);
+                    if (youboraConfig.hasKey(PROP_YOUBORA_ACCOUNTCODE)) {
+                        Options youboraOptions = YouboraConfigManager.getInstance().getOptions(getContext());
+                        youboraOptions.setAccountCode(youboraConfig.getString(PROP_YOUBORA_ACCOUNTCODE));
+                        youboraOptions.setContentResource(srcUri.toString());
+
+                        if (youboraConfig.hasKey(PROP_YOUBORA_TITLE)) {
+                            youboraOptions.setContentTitle(
+                                youboraConfig.getString(PROP_YOUBORA_TITLE)
+                            );
+                        }
+                        if (youboraConfig.hasKey(PROP_YOUBORA_APPNAME)) {
+                            youboraOptions.setAppName(
+                                youboraConfig.getString(PROP_YOUBORA_APPNAME)
+                            );
+                        }
+                        if (youboraConfig.hasKey(PROP_YOUBORA_APPRELEASEVERSION)) {
+                            youboraOptions.setAppReleaseVersion(
+                                youboraConfig.getString(PROP_YOUBORA_APPRELEASEVERSION)
+                            );
+                        }
+                        if (youboraConfig.hasKey(PROP_YOUBORA_USERNAME)) {
+                            youboraOptions.setUsername(
+                                youboraConfig.getString(PROP_YOUBORA_USERNAME)
+                            );
+                        }
+                        if (youboraConfig.hasKey(PROP_YOUBORA_PROGRAM)) {
+                            youboraOptions.setProgram(
+                                youboraConfig.getString(PROP_YOUBORA_PROGRAM)
+                            );
+                        }
+                        if (youboraConfig.hasKey(PROP_YOUBORA_IS_LIVE)) {
+                            youboraOptions.setContentIsLive(true);
+                        }
+                        if (youboraConfig.hasKey(PROP_YOUBORA_CUSTOMDIMENSION1)) {
+                            youboraOptions.setContentCustomDimension1(
+                                youboraConfig.getString(PROP_YOUBORA_CUSTOMDIMENSION1)
+                            );
+                        }
+                        youboraPlugin = new Plugin(youboraOptions, getContext());
+                        youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
+                    }
                 }
                 if (playerNeedsSource && srcUri != null) {
                     exoPlayerView.invalidateAspectRatio();
@@ -496,6 +559,13 @@ class ReactExoplayerView extends FrameLayout implements
                     reLayout(exoPlayerView);
                     eventEmitter.loadStart();
                     loadVideoStarted = true;
+
+                    if (youboraPlugin != null) {
+                        Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
+                        adapter.setCustomEventLogger((MappingTrackSelector) trackSelector);
+                        adapter.setBandwidthMeter(bandwidthMeter);
+                        youboraPlugin.setAdapter(adapter);
+                    }
                 }
 
                 // Initializing the playerControlView
@@ -1388,7 +1458,6 @@ class ReactExoplayerView extends FrameLayout implements
         this.drmLicenseHeader = header;
     }
 
-
     @Override
     public void onDrmKeysLoaded(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
         Log.d("DRM Info", "onDrmKeysLoaded");
@@ -1431,5 +1500,9 @@ class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onAdEvent(AdEvent adEvent) {
         eventEmitter.receiveAdEvent(adEvent.getType().name());
+    }
+
+    public void setYoubora(@Nullable ReadableMap config) {
+        this.youboraConfig = config;
     }
 }
