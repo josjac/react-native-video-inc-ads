@@ -153,6 +153,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     private Plugin youboraPlugin;
     private static final String PROP_YOUBORA_ACCOUNTCODE = "accountCode";
+    private static final String PROP_YOUBORA_SRC = "src";
     private static final String PROP_YOUBORA_TITLE = "title";
     private static final String PROP_YOUBORA_APPNAME = "appName";
     private static final String PROP_YOUBORA_APPRELEASEVERSION = "appReleaseVersion";
@@ -464,50 +465,6 @@ class ReactExoplayerView extends FrameLayout implements
 
                     PlaybackParameters params = new PlaybackParameters(rate, 1f);
                     player.setPlaybackParameters(params);
-
-                    // TODO: youbora
-                    YouboraLog.setDebugLevel(YouboraLog.Level.VERBOSE);
-                    if (youboraConfig.hasKey(PROP_YOUBORA_ACCOUNTCODE)) {
-                        Options youboraOptions = YouboraConfigManager.getInstance().getOptions(getContext());
-                        youboraOptions.setAccountCode(youboraConfig.getString(PROP_YOUBORA_ACCOUNTCODE));
-                        youboraOptions.setContentResource(srcUri.toString());
-
-                        if (youboraConfig.hasKey(PROP_YOUBORA_TITLE)) {
-                            youboraOptions.setContentTitle(
-                                youboraConfig.getString(PROP_YOUBORA_TITLE)
-                            );
-                        }
-                        if (youboraConfig.hasKey(PROP_YOUBORA_APPNAME)) {
-                            youboraOptions.setAppName(
-                                youboraConfig.getString(PROP_YOUBORA_APPNAME)
-                            );
-                        }
-                        if (youboraConfig.hasKey(PROP_YOUBORA_APPRELEASEVERSION)) {
-                            youboraOptions.setAppReleaseVersion(
-                                youboraConfig.getString(PROP_YOUBORA_APPRELEASEVERSION)
-                            );
-                        }
-                        if (youboraConfig.hasKey(PROP_YOUBORA_USERNAME)) {
-                            youboraOptions.setUsername(
-                                youboraConfig.getString(PROP_YOUBORA_USERNAME)
-                            );
-                        }
-                        if (youboraConfig.hasKey(PROP_YOUBORA_PROGRAM)) {
-                            youboraOptions.setProgram(
-                                youboraConfig.getString(PROP_YOUBORA_PROGRAM)
-                            );
-                        }
-                        if (youboraConfig.hasKey(PROP_YOUBORA_IS_LIVE)) {
-                            youboraOptions.setContentIsLive(true);
-                        }
-                        if (youboraConfig.hasKey(PROP_YOUBORA_CUSTOMDIMENSION1)) {
-                            youboraOptions.setContentCustomDimension1(
-                                youboraConfig.getString(PROP_YOUBORA_CUSTOMDIMENSION1)
-                            );
-                        }
-                        youboraPlugin = new Plugin(youboraOptions, getContext());
-                        youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
-                    }
                 }
                 if (playerNeedsSource && srcUri != null) {
                     exoPlayerView.invalidateAspectRatio();
@@ -669,6 +626,11 @@ class ReactExoplayerView extends FrameLayout implements
             trackSelector = null;
             player = null;
         }
+
+        if (youboraPlugin != null) {
+            youboraPlugin.fireStop();
+        }
+
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
         audioBecomingNoisyReceiver.removeListener();
@@ -1349,7 +1311,6 @@ class ReactExoplayerView extends FrameLayout implements
         }
     }
 
-
     public void setVolumeModifier(float volume) {
         audioVolume = volume;
         if (player != null) {
@@ -1504,5 +1465,52 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setYoubora(@Nullable ReadableMap config) {
         this.youboraConfig = config;
+        // TODO: youbora
+        YouboraLog.setDebugLevel(YouboraLog.Level.VERBOSE);
+        if (youboraConfig.hasKey(PROP_YOUBORA_ACCOUNTCODE)) {
+            Options youboraOptions = YouboraConfigManager.getInstance().getOptions(getContext());
+            youboraOptions.setAccountCode(youboraConfig.getString(PROP_YOUBORA_ACCOUNTCODE));
+
+            if (youboraConfig.hasKey(PROP_YOUBORA_SRC)) {
+                youboraOptions.setContentResource(
+                    youboraConfig.getString(PROP_YOUBORA_SRC)
+                );
+            }
+            if (youboraConfig.hasKey(PROP_YOUBORA_TITLE)) {
+                youboraOptions.setContentTitle(
+                    youboraConfig.getString(PROP_YOUBORA_TITLE)
+                );
+            }
+            if (youboraConfig.hasKey(PROP_YOUBORA_APPNAME)) {
+                youboraOptions.setAppName(
+                    youboraConfig.getString(PROP_YOUBORA_APPNAME)
+                );
+            }
+            if (youboraConfig.hasKey(PROP_YOUBORA_APPRELEASEVERSION)) {
+                youboraOptions.setAppReleaseVersion(
+                    youboraConfig.getString(PROP_YOUBORA_APPRELEASEVERSION)
+                );
+            }
+            if (youboraConfig.hasKey(PROP_YOUBORA_USERNAME)) {
+                youboraOptions.setUsername(
+                    youboraConfig.getString(PROP_YOUBORA_USERNAME)
+                );
+            }
+            if (youboraConfig.hasKey(PROP_YOUBORA_PROGRAM)) {
+                youboraOptions.setProgram(
+                    youboraConfig.getString(PROP_YOUBORA_PROGRAM)
+                );
+            }
+            if (youboraConfig.hasKey(PROP_YOUBORA_IS_LIVE)) {
+                youboraOptions.setContentIsLive(true);
+            }
+            if (youboraConfig.hasKey(PROP_YOUBORA_CUSTOMDIMENSION1)) {
+                youboraOptions.setContentCustomDimension1(
+                    youboraConfig.getString(PROP_YOUBORA_CUSTOMDIMENSION1)
+                );
+            }
+            youboraPlugin = new Plugin(youboraOptions, getContext());
+            youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
+        }
     }
 }

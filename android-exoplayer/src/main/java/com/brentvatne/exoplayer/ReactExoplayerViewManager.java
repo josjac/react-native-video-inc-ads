@@ -74,6 +74,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     // youbora
     private static final String PROP_YOUBORA = "youbora";
     private static final String PROP_YOUBORA_ACCOUNTCODE = "accountCode";
+    private static final String PROP_YOUBORA_SRC = "src";
     private static final String PROP_YOUBORA_TITLE = "title";
     private static final String PROP_YOUBORA_APPNAME = "appName";
     private static final String PROP_YOUBORA_APPRELEASEVERSION = "appReleaseVersion";
