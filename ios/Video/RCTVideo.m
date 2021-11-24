@@ -5,6 +5,8 @@
 #import <React/UIView+React.h>
 #include <MediaAccessibility/MediaAccessibility.h>
 #include <AVFoundation/AVFoundation.h>
+#import <YouboraAVPlayerAdapter/YouboraAVPlayerAdapter.h>
+#import <YouboraLib/YouboraLib.h>
 
 static NSString *const statusKeyPath = @"status";
 static NSString *const playbackLikelyToKeepUpKeyPath = @"playbackLikelyToKeepUp";
@@ -35,6 +37,9 @@ static int const RCTVideoUnset = -1;
   NSURL *_videoURL;
   BOOL _requestingCertificate;
   BOOL _requestingCertificateErrored;
+  YBPlugin *plugin;
+  NSDictionary *_youbora;
+
 
   /* DRM */
   NSDictionary *_drm;
@@ -222,6 +227,9 @@ static int const RCTVideoUnset = -1;
   [self removePlayerItemObservers];
   [_player removeObserver:self forKeyPath:playbackRate context:nil];
   [_player removeObserver:self forKeyPath:externalPlaybackActive context: nil];
+  [self->plugin fireStop];
+  [self->plugin removeAdapter];
+  [self->plugin removeAdsAdapter];
 }
 
 #pragma mark - App lifecycle handlers
@@ -406,6 +414,46 @@ static int const RCTVideoUnset = -1;
         [self setAutomaticallyWaitsToMinimizeStalling:_automaticallyWaitsToMinimizeStalling];
       }
 
+      YBOptions *options = [YBOptions new];
+      options.offline = false;
+      options.contentResource = [self->_source objectForKey:@"uri"];
+      
+      if ([self->_youbora objectForKey:@"accountCode"]) {
+        options.accountCode = [self->_youbora objectForKey:@"accountCode"];
+      }
+      
+      if ([self->_youbora objectForKey:@"title"]) {
+        options.contentTitle = [self->_youbora objectForKey:@"title"];
+      }
+      
+      if ([self->_youbora objectForKey:@"appName"]) {
+        options.appName = [self->_youbora objectForKey:@"appName"];
+      }
+      
+      if ([self->_youbora objectForKey:@"appReleaseVersion"]) {
+        options.appReleaseVersion = [self->_youbora objectForKey:@"appReleaseVersion"];
+      }
+      
+      if ([self->_youbora objectForKey:@"program"]) {
+        options.program = [self->_youbora objectForKey:@"program"];
+      }
+      
+      if ([self->_youbora objectForKey:@"isLive"]) {
+        options.contentIsLive = [[NSNumber alloc] initWithBool: true];
+      }
+      
+      if ([self->_youbora objectForKey:@"username"]) {
+        options.username = [self->_youbora objectForKey:@"username"];
+      }
+      
+      if ([self->_youbora objectForKey:@"customDimension1"]) {
+        options.adCustomDimension1 = [self->_youbora objectForKey:@"customDimension1"];
+      }
+      
+      
+      self->plugin = [[YBPlugin alloc] initWithOptions:options];
+      [self->plugin setAdapter:[[YBAVPlayerAdapter alloc] initWithPlayer:_player]];
+
       //Perform on next run loop, otherwise onVideoLoadStart is nil
       if (self.onVideoLoadStart) {
         id uri = [self->_source objectForKey:@"uri"];
@@ -421,6 +469,10 @@ static int const RCTVideoUnset = -1;
     }];
   });
   _videoLoadStarted = YES;
+}
+
+- (void)setYoubora:(NSDictionary *)youbora {
+  _youbora = youbora;
 }
 
 - (void)setDrm:(NSDictionary *)drm {
