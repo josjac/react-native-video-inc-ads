@@ -227,9 +227,12 @@ static int const RCTVideoUnset = -1;
   [self removePlayerItemObservers];
   [_player removeObserver:self forKeyPath:playbackRate context:nil];
   [_player removeObserver:self forKeyPath:externalPlaybackActive context: nil];
-  [self->plugin fireStop];
-  [self->plugin removeAdapter];
-  [self->plugin removeAdsAdapter];
+
+  if (self->plugin != nil) {
+    [self->plugin fireStop];
+    [self->plugin removeAdapter];
+    [self->plugin removeAdsAdapter];
+  }
 }
 
 #pragma mark - App lifecycle handlers
@@ -414,45 +417,9 @@ static int const RCTVideoUnset = -1;
         [self setAutomaticallyWaitsToMinimizeStalling:_automaticallyWaitsToMinimizeStalling];
       }
 
-      YBOptions *options = [YBOptions new];
-      options.offline = false;
-      options.contentResource = [self->_source objectForKey:@"uri"];
-      
-      if ([self->_youbora objectForKey:@"accountCode"]) {
-        options.accountCode = [self->_youbora objectForKey:@"accountCode"];
+      if (self->plugin != nil) {
+        [self->plugin setAdapter:[[YBAVPlayerAdapter alloc] initWithPlayer:_player]];
       }
-      
-      if ([self->_youbora objectForKey:@"title"]) {
-        options.contentTitle = [self->_youbora objectForKey:@"title"];
-      }
-      
-      if ([self->_youbora objectForKey:@"appName"]) {
-        options.appName = [self->_youbora objectForKey:@"appName"];
-      }
-      
-      if ([self->_youbora objectForKey:@"appReleaseVersion"]) {
-        options.appReleaseVersion = [self->_youbora objectForKey:@"appReleaseVersion"];
-      }
-      
-      if ([self->_youbora objectForKey:@"program"]) {
-        options.program = [self->_youbora objectForKey:@"program"];
-      }
-      
-      if ([self->_youbora objectForKey:@"isLive"]) {
-        options.contentIsLive = [[NSNumber alloc] initWithBool: true];
-      }
-      
-      if ([self->_youbora objectForKey:@"username"]) {
-        options.username = [self->_youbora objectForKey:@"username"];
-      }
-      
-      if ([self->_youbora objectForKey:@"customDimension1"]) {
-        options.adCustomDimension1 = [self->_youbora objectForKey:@"customDimension1"];
-      }
-      
-      
-      self->plugin = [[YBPlugin alloc] initWithOptions:options];
-      [self->plugin setAdapter:[[YBAVPlayerAdapter alloc] initWithPlayer:_player]];
 
       //Perform on next run loop, otherwise onVideoLoadStart is nil
       if (self.onVideoLoadStart) {
@@ -473,6 +440,48 @@ static int const RCTVideoUnset = -1;
 
 - (void)setYoubora:(NSDictionary *)youbora {
   _youbora = youbora;
+
+  // TODO: youbora
+  [YBLog setDebugLevel:YBLogLevelVerbose];
+
+  if ([self->_youbora objectForKey:@"accountCode"]) {
+    YBOptions *options = [YBOptions new];
+    options.accountCode = [self->_youbora objectForKey:@"accountCode"];
+    
+    if ([self->_youbora objectForKey:@"src"]) {
+      options.contentResource = [self->_youbora objectForKey:@"src"];
+    }
+    
+    if ([self->_youbora objectForKey:@"title"]) {
+      options.contentTitle = [self->_youbora objectForKey:@"title"];
+    }
+    
+    if ([self->_youbora objectForKey:@"appName"]) {
+      options.appName = [self->_youbora objectForKey:@"appName"];
+    }
+    
+    if ([self->_youbora objectForKey:@"appReleaseVersion"]) {
+      options.appReleaseVersion = [self->_youbora objectForKey:@"appReleaseVersion"];
+    }
+    
+    if ([self->_youbora objectForKey:@"program"]) {
+      options.program = [self->_youbora objectForKey:@"program"];
+    }
+    
+    if ([self->_youbora objectForKey:@"isLive"]) {
+      options.contentIsLive = [[NSNumber alloc] initWithBool: true];
+    }
+    
+    if ([self->_youbora objectForKey:@"username"]) {
+      options.username = [self->_youbora objectForKey:@"username"];
+    }
+    
+    if ([self->_youbora objectForKey:@"customDimension1"]) {
+      options.adCustomDimension1 = [self->_youbora objectForKey:@"customDimension1"];
+    }
+    
+    self->plugin = [[YBPlugin alloc] initWithOptions:options];
+  }
 }
 
 - (void)setDrm:(NSDictionary *)drm {
