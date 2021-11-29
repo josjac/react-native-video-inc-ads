@@ -454,6 +454,14 @@ class ReactExoplayerView extends FrameLayout implements
                                 .setBandwidthMeter(bandwidthMeter)
                                 .setLoadControl(defaultLoadControl)
                                 .build();
+
+                    if (youboraPlugin != null) {
+                        Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
+                        adapter.setCustomEventLogger((MappingTrackSelector) trackSelector);
+                        adapter.setBandwidthMeter(bandwidthMeter);
+                        youboraPlugin.setAdapter(adapter);
+                    }
+
                     player.addListener(self);
                     player.addMetadataOutput(self);
                     adsLoader.setPlayer(player);
@@ -516,13 +524,6 @@ class ReactExoplayerView extends FrameLayout implements
                     reLayout(exoPlayerView);
                     eventEmitter.loadStart();
                     loadVideoStarted = true;
-
-                    if (youboraPlugin != null) {
-                        Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
-                        adapter.setCustomEventLogger((MappingTrackSelector) trackSelector);
-                        adapter.setBandwidthMeter(bandwidthMeter);
-                        youboraPlugin.setAdapter(adapter);
-                    }
                 }
 
                 // Initializing the playerControlView
