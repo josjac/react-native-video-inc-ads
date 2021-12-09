@@ -477,11 +477,11 @@ static int const RCTVideoUnset = -1;
     }
     
     if ([self->_youbora objectForKey:@"customDimension1"]) {
-      options.adCustomDimension1 = [self->_youbora objectForKey:@"customDimension1"];
+      options.contentCustomDimension1 = [self->_youbora objectForKey:@"customDimension1"];
     }
 
     if ([self->_youbora objectForKey:@"customDimension3"]) {
-      options.adCustomDimension3 = [self->_youbora objectForKey:@"customDimension3"];
+      options.contentCustomDimension3 = [self->_youbora objectForKey:@"customDimension3"];
     }
     
     self->plugin = [[YBPlugin alloc] initWithOptions:options];
