@@ -484,6 +484,8 @@ static int const RCTVideoUnset = -1;
       options.customDimension3 = [self->_youbora objectForKey:@"customDimension3"];
     }
     
+    options.autoDetectBackground = false;
+    
     self->plugin = [[YBPlugin alloc] initWithOptions:options];
   }
 }
