@@ -483,6 +483,8 @@ static int const RCTVideoUnset = -1;
     if ([self->_youbora objectForKey:@"customDimension3"]) {
       options.customDimension3 = [self->_youbora objectForKey:@"customDimension3"];
     }
+
+    options.offline = false;
     
     options.autoDetectBackground = false;
     
