@@ -73,16 +73,8 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_CONTROLS = "controls";
     // youbora
     private static final String PROP_YOUBORA = "youbora";
-    private static final String PROP_YOUBORA_ACCOUNTCODE = "accountCode";
-    private static final String PROP_YOUBORA_SRC = "src";
-    private static final String PROP_YOUBORA_TITLE = "title";
-    private static final String PROP_YOUBORA_APPNAME = "appName";
-    private static final String PROP_YOUBORA_APPRELEASEVERSION = "appReleaseVersion";
-    private static final String PROP_YOUBORA_IS_LIVE = "isLive";
-    private static final String PROP_YOUBORA_USERNAME = "username";
-    private static final String PROP_YOUBORA_PROGRAM = "program";
-    private static final String PROP_YOUBORA_CUSTOMDIMENSION1 = "customDimension1";
-    private static final String PROP_YOUBORA_CUSTOMDIMENSION3 = "customDimension3";
+    // kantar
+    private static final String PROP_KANTAR = "kantar";
 
     private ReactExoplayerConfig config;
 
@@ -366,6 +358,13 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     public void setYoubora(final ReactExoplayerView videoView, @Nullable ReadableMap youbora) {
         if (youbora != null) {
             videoView.setYoubora(youbora);
+        }
+    }
+
+    @ReactProp(name = PROP_KANTAR)
+    public void setKantar(final ReactExoplayerView videoView, @Nullable ReadableMap kantar) {
+        if (kantar != null) {
+            videoView.setKantar(kantar);
         }
     }
 

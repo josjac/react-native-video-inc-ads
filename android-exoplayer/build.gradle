@@ -53,4 +53,7 @@ dependencies {
     // youbora
     implementation 'com.nicepeopleatwork:configutil:0.4.7'
     implementation "com.nicepeopleatwork:exoplayer-adapter:6.7.23"
+
+    // kantar
+    implementation files('kantarmedia-streaming-android-demo-1.8.1.aar')
 }

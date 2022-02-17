@@ -89,11 +89,15 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.Map;
 
 import javax.annotation.Nullable;
+
+import de.spring.mobile.SpringStreams;
+import de.spring.mobile.Stream;
 
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements
@@ -163,6 +167,18 @@ class ReactExoplayerView extends FrameLayout implements
     private static final String PROP_YOUBORA_CUSTOMDIMENSION1 = "customDimension1";
     private static final String PROP_YOUBORA_CUSTOMDIMENSION3 = "customDimension3";
 
+    private static SpringStreams sensor;
+    private static Stream stream;
+    private static final String PROP_KANTAR_SITE = "site";
+    private static final String PROP_KANTAR_APPNAME = "appname";
+    private static final String PROP_KANTAR_STREAM = "stream";
+    private static final String PROP_KANTAR_APPRELEASEVERSION = "appReleaseVersion";
+    private static final String PROP_KANTAR_CONTENTID = "contentId";
+    private static final String PROP_KANTAR_DEVICETYPE = "deviceType";
+    private static final String PROP_KANTAR_CONTENTDURATION = "contentDuration";
+    private static final String PROP_KANTAR_DEBUG = "debug";
+
+
     private Handler mainHandler;
 
     // Props from React
@@ -188,6 +204,7 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean controls;
     private Uri adTagUrl;
     private ReadableMap youboraConfig;
+    private ReadableMap kantarConfig;
     // \ End props
 
     // React
@@ -286,7 +303,9 @@ class ReactExoplayerView extends FrameLayout implements
         if (!playInBackground || !isInBackground) {
             setPlayWhenReady(!isPaused);
         }
+        kantarTrack();
         isInBackground = false;
+        Log.d("Kantar", "onHostResume");
     }
 
     @Override
@@ -296,12 +315,24 @@ class ReactExoplayerView extends FrameLayout implements
             return;
         }
         setPlayWhenReady(false);
+
+        if (stream != null) {
+            stream.stop();
+            Log.d("Kantar", "stream.stop()");
+        }
+        Log.d("Kantar", "onHostPause");
     }
 
     @Override
     public void onHostDestroy() {
         stopPlayback();
         adsLoader.release();
+
+        if (sensor != null) {
+            sensor.unload();
+            Log.d("Kantar", "sensor.unload()");
+        }
+        Log.d("Kantar", "onHostDestroy");
     }
 
     public void cleanUpResources() {
@@ -474,6 +505,8 @@ class ReactExoplayerView extends FrameLayout implements
 
                     PlaybackParameters params = new PlaybackParameters(rate, 1f);
                     player.setPlaybackParameters(params);
+
+                    kantarTrack();
                 }
                 if (playerNeedsSource && srcUri != null) {
                     exoPlayerView.invalidateAspectRatio();
@@ -1518,6 +1551,70 @@ class ReactExoplayerView extends FrameLayout implements
             }
             youboraPlugin = new Plugin(youboraOptions, getContext());
             youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
+        }
+    }
+
+    public void setKantar(@Nullable ReadableMap config) {
+        this.kantarConfig = config;
+        Log.d("Kantar", "config: " + config.toString());
+        if (kantarConfig.hasKey(PROP_KANTAR_SITE) && kantarConfig.hasKey(PROP_KANTAR_APPNAME)) {
+            if (sensor == null) {
+                sensor = SpringStreams.getInstance(
+                    kantarConfig.getString(PROP_KANTAR_SITE),
+                    kantarConfig.getString(PROP_KANTAR_APPNAME), 
+                    themedReactContext.getReactApplicationContext()
+                );
+
+                if (kantarConfig.hasKey(PROP_KANTAR_DEBUG)) {
+                    sensor.setDebug(true);
+                }
+            }
+        }
+
+    }
+
+    public void kantarTrack() {
+        if (sensor != null && player != null) {
+            Map<String, Object> atts = new HashMap<String, Object>();
+
+            if (kantarConfig.hasKey(PROP_KANTAR_SITE)) {
+                atts.put("sitename", kantarConfig.getString(PROP_KANTAR_SITE));
+            }
+
+            if (kantarConfig.hasKey(PROP_KANTAR_APPNAME)) {
+                atts.put("pl", kantarConfig.getString(PROP_KANTAR_APPNAME));
+            }
+
+            if (kantarConfig.hasKey(PROP_KANTAR_APPRELEASEVERSION)) {
+                atts.put("plv", kantarConfig.getString(PROP_KANTAR_APPRELEASEVERSION));
+            }
+
+            if (kantarConfig.hasKey(PROP_KANTAR_CONTENTID)) {
+                atts.put("cq", kantarConfig.getString(PROP_KANTAR_CONTENTID));
+            }
+
+            if (kantarConfig.hasKey(PROP_KANTAR_STREAM)) {
+                atts.put("stream", kantarConfig.getString(PROP_KANTAR_STREAM));
+            }
+
+            if (kantarConfig.hasKey(PROP_KANTAR_DEVICETYPE)) {
+                atts.put("ct", kantarConfig.getString(PROP_KANTAR_DEVICETYPE));
+            }
+
+            if (kantarConfig.hasKey(PROP_KANTAR_CONTENTDURATION)) {
+                atts.put("dur", kantarConfig.getString(PROP_KANTAR_CONTENTDURATION));
+            }
+
+            Log.d("Kantar", "kantarTrack config: " + atts.toString());
+
+            stream = sensor.track(
+                new ExoPlayerAdapter(
+                    player, 
+                    themedReactContext, 
+                    kantarConfig.getString(PROP_KANTAR_APPRELEASEVERSION)
+                ), 
+                atts
+            );
         }
     }
 }
