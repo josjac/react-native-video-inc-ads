@@ -508,6 +508,28 @@ Video.propTypes = {
   needsToRestoreUserInterfaceForPictureInPictureStop: PropTypes.func,
   onExternalPlaybackChange: PropTypes.func,
   onReceiveAdEvents: PropTypes.func,
+  youbora: PropTypes.shape({
+    accountCode: PropTypes.string,
+    src: PropTypes.string,
+    title: PropTypes.string,
+    appName: PropTypes.string,
+    appReleaseVersion: PropTypes.string,
+    isLive: PropTypes.bool,
+    username: PropTypes.string,
+    program: PropTypes.string,
+    customDimension1: PropTypes.string,
+    customDimension3: PropTypes.string,
+  }),
+  kantar: PropTypes.shape({
+    site: PropTypes.string,
+    appname: PropTypes.string,
+    appReleaseVersion: PropTypes.string,
+    contentId: PropTypes.string,
+    stream: PropTypes.string,
+    deviceType: PropTypes.oneOf(['PC', 'Tablet', 'Mobile', 'Game-console', 'set-top-box', 'smart-tv']),
+    contentDuration: PropTypes.number,
+    debug: PropTypes.bool,
+  }),
 
   /* Required by react-native */
   scaleX: PropTypes.number,
