@@ -325,11 +325,7 @@ class ReactExoplayerView extends FrameLayout implements
     public void onHostDestroy() {
         stopPlayback();
         adsLoader.release();
-
-        if (sensor != null) {
-            sensor.unload();
-            Log.d("Kantar", "sensor.unload()");
-        }
+        kantarUnload();
         Log.d("Kantar", "onHostDestroy");
     }
 
@@ -664,7 +660,7 @@ class ReactExoplayerView extends FrameLayout implements
             youboraPlugin.fireStop();
         }
 
-        kantarStop();
+        kantarUnload();
 
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
@@ -1577,6 +1573,12 @@ class ReactExoplayerView extends FrameLayout implements
         if (stream != null) {
             stream.stop();
             Log.d("Kantar", "stream.stop()");
+        }
+    }
+
+    public void kantarUnload() {
+        if (sensor != null) {
+            sensor.unload();
         }
     }
 
