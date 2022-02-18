@@ -1564,6 +1564,7 @@ class ReactExoplayerView extends FrameLayout implements
                 if (kantarConfig.hasKey(PROP_KANTAR_DEBUG)) {
                     sensor.setDebug(true);
                 }
+                Log.d("Kantar", "create sensor " + sensor.toString());
             }
         }
 
@@ -1577,8 +1578,12 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     public void kantarUnload() {
+        kantarStop();
+
         if (sensor != null) {
             sensor.unload();
+            sensor = null;
+            stream = null;
         }
     }
 
