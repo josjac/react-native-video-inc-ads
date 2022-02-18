@@ -316,10 +316,8 @@ class ReactExoplayerView extends FrameLayout implements
         }
         setPlayWhenReady(false);
 
-        if (stream != null) {
-            stream.stop();
-            Log.d("Kantar", "stream.stop()");
-        }
+        kantarStop();
+
         Log.d("Kantar", "onHostPause");
     }
 
@@ -665,6 +663,8 @@ class ReactExoplayerView extends FrameLayout implements
         if (youboraPlugin != null) {
             youboraPlugin.fireStop();
         }
+
+        kantarStop();
 
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
@@ -1571,6 +1571,13 @@ class ReactExoplayerView extends FrameLayout implements
             }
         }
 
+    }
+
+    public void kantarStop() {
+        if (stream != null) {
+            stream.stop();
+            Log.d("Kantar", "stream.stop()");
+        }
     }
 
     public void kantarTrack() {
