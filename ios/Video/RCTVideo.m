@@ -238,7 +238,6 @@ static int const RCTVideoUnset = -1;
     [self->plugin removeAdapter];
     [self->plugin removeAdsAdapter];
   }
-
   [self kantarUnload];
 }
 
@@ -269,6 +268,7 @@ static int const RCTVideoUnset = -1;
     [_playerLayer setPlayer:_player];
     [_playerViewController setPlayer:_player];
   }
+  [self kantarTrack];
 }
 
 #pragma mark - Audio events
