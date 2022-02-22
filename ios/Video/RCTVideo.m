@@ -507,7 +507,12 @@ static int const RCTVideoUnset = -1;
   NSLog(@"Joz setKantar config: %@", _kantar);
   if ([self->_kantar objectForKey:@"site"] && [self->_kantar objectForKey:@"appname"]) {
     if (!self->kantarSensor) {
-      self->kantarSensor = [KMA_SpringStreams getInstance:[self->_kantar objectForKey:@"site"] a:[self->_kantar objectForKey:@"appname"]];
+      self->kantarSensor = [KMA_SpringStreams getInstance];
+
+      if (!self->kantarSensor) {
+        self->kantarSensor = [KMA_SpringStreams getInstance:[self->_kantar objectForKey:@"site"] a:[self->_kantar objectForKey:@"appname"]];
+      }
+
       if ([self->_kantar objectForKey:@"debug"]) {
         [self->kantarSensor setDebug:true];
       }
