@@ -5,6 +5,7 @@
 #import "RCTVideoPlayerViewControllerDelegate.h"
 #import <React/RCTComponent.h>
 #import <React/RCTBridgeModule.h>
+#import "KMA_SpringStreams.h"
 @import GoogleInteractiveMediaAds;
 
 #if __has_include(<react-native-video/RCTVideoCache.h>)

@@ -7,6 +7,8 @@
 #include <AVFoundation/AVFoundation.h>
 #import <YouboraAVPlayerAdapter/YouboraAVPlayerAdapter.h>
 #import <YouboraLib/YouboraLib.h>
+#import "KMA_SpringStreams.h"
+
 
 static NSString *const statusKeyPath = @"status";
 static NSString *const playbackLikelyToKeepUpKeyPath = @"playbackLikelyToKeepUp";
@@ -39,6 +41,9 @@ static int const RCTVideoUnset = -1;
   BOOL _requestingCertificateErrored;
   YBPlugin *plugin;
   NSDictionary *_youbora;
+  NSDictionary *_kantar;
+  KMA_SpringStreams *kantarSensor;
+  KMA_Stream *kantarStream;
 
 
   /* DRM */
@@ -233,6 +238,8 @@ static int const RCTVideoUnset = -1;
     [self->plugin removeAdapter];
     [self->plugin removeAdsAdapter];
   }
+
+  [self kantarUnload];
 }
 
 #pragma mark - App lifecycle handlers
@@ -252,6 +259,7 @@ static int const RCTVideoUnset = -1;
     [_playerLayer setPlayer:nil];
     [_playerViewController setPlayer:nil];
   }
+  [self kantarStop];
 }
 
 - (void)applicationWillEnterForeground:(NSNotification *)notification
@@ -421,6 +429,8 @@ static int const RCTVideoUnset = -1;
         [self->plugin setAdapter:[[YBAVPlayerAdapter alloc] initWithPlayer:_player]];
       }
 
+      [self kantarTrack];
+
       //Perform on next run loop, otherwise onVideoLoadStart is nil
       if (self.onVideoLoadStart) {
         id uri = [self->_source objectForKey:@"uri"];
@@ -489,6 +499,78 @@ static int const RCTVideoUnset = -1;
     options.autoDetectBackground = false;
     
     self->plugin = [[YBPlugin alloc] initWithOptions:options];
+  }
+}
+
+- (void)setKantar:(NSDictionary *)kantar {
+  _kantar = kantar;
+  NSLog(@"Joz setKantar config: %@", _kantar);
+  if ([self->_kantar objectForKey:@"site"] && [self->_kantar objectForKey:@"appname"]) {
+    if (!self->kantarSensor) {
+      self->kantarSensor = [KMA_SpringStreams getInstance:[self->_kantar objectForKey:@"site"] a:[self->_kantar objectForKey:@"appname"]];
+      if ([self->_kantar objectForKey:@"debug"]) {
+        [self->kantarSensor setDebug:true];
+      }
+      NSLog(@"Joz setKantar create sensor");
+    }
+  }
+}
+
+- (void)kantarStop {
+  NSLog(@"Joz kantarStop");
+
+  if (self->kantarStream) {
+    [self->kantarStream stop];
+    NSLog(@"Joz kantarStream stop");
+  }
+}
+
+- (void)kantarUnload {
+  NSLog(@"Joz kantarUnload");
+
+  [self kantarStop];
+  
+  if (self->kantarSensor) {
+    [self->kantarSensor unload];
+    self->kantarSensor = nil;
+    self->kantarStream = nil;
+    NSLog(@"Joz kantarUnload unload");
+  }
+}
+
+- (void)kantarTrack {
+  NSLog(@"Joz kantarTrack");
+
+  if (self->kantarSensor && self->_player) {
+    
+    KMA_MediaPlayerAdapter *adapter = [[KMA_MediaPlayerAdapter alloc] adapter:_playerViewController];
+    NSMutableDictionary *atts = [[NSMutableDictionary alloc] init];
+                                       
+    if ([self->_kantar objectForKey:@"site"]) {
+      [atts setObject:[self->_kantar objectForKey:@"site"] forKey:@"sitename"];
+    }
+    if ([self->_kantar objectForKey:@"appname"]) {
+      [atts setObject:[self->_kantar objectForKey:@"appname"] forKey:@"pl"];
+    }
+    if ([self->_kantar objectForKey:@"appReleaseVersion"]) {
+      [atts setObject:[self->_kantar objectForKey:@"appReleaseVersion"] forKey:@"plv"];
+    }
+    if ([self->_kantar objectForKey:@"contentId"]) {
+      [atts setObject:[self->_kantar objectForKey:@"contentId"] forKey:@"cq"];
+    }
+    if ([self->_kantar objectForKey:@"stream"]) {
+      [atts setObject:[self->_kantar objectForKey:@"stream"] forKey:@"stream"];
+    }
+    if ([self->_kantar objectForKey:@"deviceType"]) {
+      [atts setObject:[self->_kantar objectForKey:@"deviceType"] forKey:@"ct"];
+    }
+    if ([self->_kantar objectForKey:@"contentDuration"]) {
+      [atts setObject:[self->_kantar objectForKey:@"contentDuration"] forKey:@"dur"];
+    }
+    
+    NSLog(@"Joz kantarTrack createtrack %@", atts);
+    
+    self->kantarStream = [self->kantarSensor track:adapter atts:atts];
   }
 }
 
