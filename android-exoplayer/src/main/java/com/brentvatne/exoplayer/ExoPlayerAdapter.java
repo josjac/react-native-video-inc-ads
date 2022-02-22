@@ -49,30 +49,46 @@ public class ExoPlayerAdapter implements StreamAdapter {
 
     @Override
     public int getPosition() {
-        return (int) Math.round(player.getCurrentPosition()/1000.0);
+        try {
+            return (int) Math.round(player.getCurrentPosition()/1000.0);
+        } catch(Exception e) {
+            return 0;
+        }
     }
 
     @Override
     public int getDuration() {
-        return (int) Math.round(player.getDuration()/1000.0);
+        try {
+            return (int) Math.round(player.getDuration()/1000.0);
+        } catch(Exception e) {
+            return 0;
+        }
     }
 
     @Override
     public int getWidth() {
-        Format f =  player.getVideoFormat();
-        if (f != null && f.width > 0) {
-            return f.width;
-        } else {
+        try {
+            Format f =  player.getVideoFormat();
+            if (f != null && f.width > 0) {
+                return f.width;
+            } else {
+                return 0;
+            }
+        } catch(Exception e) {
             return 0;
         }
     }
 
     @Override
     public int getHeight() {
-        Format f =  player.getVideoFormat();
-        if (f != null && f.width > 0) {
-            return f.height;
-        } else {
+        try {
+            Format f =  player.getVideoFormat();
+            if (f != null && f.width > 0) {
+                return f.height;
+            } else {
+                return 0;
+            }
+        } catch(Exception e) {
             return 0;
         }
     }
