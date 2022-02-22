@@ -55,5 +55,14 @@ dependencies {
     implementation "com.nicepeopleatwork:exoplayer-adapter:6.7.23"
 
     // kantar
-    implementation files('kantarmedia-streaming-android-demo-1.8.1.aar')
+    // instalar libreria a nivel de proyecto
+    // /android/kantar
+    //   -- build.gradle
+    //   -- kantarmedia-streaming-android-demo-1.8.1.aar
+    // agregar en: /android/kantar/build.gradle
+    //   configurations.maybeCreate("default")
+    //   artifacts.add("default", file('kantarmedia-streaming-android-demo-1.8.1.aar'))
+    // agregar en /android/settings.gradle
+    //  include ':kantar'
+    implementation project(":kantar")
 }
