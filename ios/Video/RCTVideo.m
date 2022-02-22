@@ -504,34 +504,35 @@ static int const RCTVideoUnset = -1;
 
 - (void)setKantar:(NSDictionary *)kantar {
   _kantar = kantar;
-  NSLog(@"Joz setKantar config: %@", _kantar);
+  NSLog(@"KMA_SpringStreams setKantar config: %@", _kantar);
   if ([self->_kantar objectForKey:@"site"] && [self->_kantar objectForKey:@"appname"]) {
     if (!self->kantarSensor) {
-      self->kantarSensor = [KMA_SpringStreams getInstance];
-
-      if (!self->kantarSensor) {
+      @try {
+        self->kantarSensor = [KMA_SpringStreams getInstance];
+      }
+      @catch(id anException) {
         self->kantarSensor = [KMA_SpringStreams getInstance:[self->_kantar objectForKey:@"site"] a:[self->_kantar objectForKey:@"appname"]];
       }
 
       if ([self->_kantar objectForKey:@"debug"]) {
         [self->kantarSensor setDebug:true];
       }
-      NSLog(@"Joz setKantar create sensor");
+      NSLog(@"KMA_SpringStreams setKantar create sensor");
     }
   }
 }
 
 - (void)kantarStop {
-  NSLog(@"Joz kantarStop");
+  NSLog(@"KMA_SpringStreams kantarStop");
 
   if (self->kantarStream) {
     [self->kantarStream stop];
-    NSLog(@"Joz kantarStream stop");
+    NSLog(@"KMA_SpringStreams kantarStream stop");
   }
 }
 
 - (void)kantarUnload {
-  NSLog(@"Joz kantarUnload");
+  NSLog(@"KMA_SpringStreams kantarUnload");
 
   [self kantarStop];
   
@@ -539,12 +540,12 @@ static int const RCTVideoUnset = -1;
     [self->kantarSensor unload];
     self->kantarSensor = nil;
     self->kantarStream = nil;
-    NSLog(@"Joz kantarUnload unload");
+    NSLog(@"KMA_SpringStreams kantarUnload unload");
   }
 }
 
 - (void)kantarTrack {
-  NSLog(@"Joz kantarTrack");
+  NSLog(@"KMA_SpringStreams kantarTrack");
 
   if (self->kantarSensor && self->_player) {
     
@@ -573,7 +574,7 @@ static int const RCTVideoUnset = -1;
       [atts setObject:[self->_kantar objectForKey:@"contentDuration"] forKey:@"dur"];
     }
     
-    NSLog(@"Joz kantarTrack createtrack %@", atts);
+    NSLog(@"KMA_SpringStreams kantarTrack createtrack %@", atts);
     
     self->kantarStream = [self->kantarSensor track:adapter atts:atts];
   }
