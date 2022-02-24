@@ -238,6 +238,7 @@ static int const RCTVideoUnset = -1;
     [self->plugin removeAdapter];
     [self->plugin removeAdsAdapter];
   }
+
   [self kantarUnload];
 }
 
