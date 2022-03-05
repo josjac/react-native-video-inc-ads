@@ -169,6 +169,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     private static SpringStreams sensor;
     private static Stream stream;
+    private static ExoPlayerAdapter kantarAdapter;
     private static final String PROP_KANTAR_SITE = "site";
     private static final String PROP_KANTAR_APPNAME = "appname";
     private static final String PROP_KANTAR_STREAM = "stream";
@@ -177,6 +178,10 @@ class ReactExoplayerView extends FrameLayout implements
     private static final String PROP_KANTAR_DEVICETYPE = "deviceType";
     private static final String PROP_KANTAR_CONTENTDURATION = "contentDuration";
     private static final String PROP_KANTAR_DEBUG = "debug";
+
+    Handler playbackHandler;
+    Runnable playbackRunnable;
+
 
 
     private Handler mainHandler;
@@ -226,6 +231,11 @@ class ReactExoplayerView extends FrameLayout implements
                         eventEmitter.progressChanged(pos, bufferedDuration, player.getDuration(), getPositionInFirstPeriodMsForCurrentWindow(pos));
                         msg = obtainMessage(SHOW_PROGRESS);
                         sendMessageDelayed(msg, Math.round(mProgressUpdateInterval));
+
+                        if (kantarAdapter != null) {
+                            kantarAdapter.setPosition((int) pos);
+                            kantarAdapter.setDuration((int) player.getDuration());
+                        }
                     }
                     break;
             }
@@ -1605,6 +1615,8 @@ class ReactExoplayerView extends FrameLayout implements
 
             if (kantarConfig.hasKey(PROP_KANTAR_CONTENTID)) {
                 atts.put("cq", kantarConfig.getString(PROP_KANTAR_CONTENTID));
+            } else {
+                atts.put("cq", null);
             }
 
             if (kantarConfig.hasKey(PROP_KANTAR_STREAM)) {
@@ -1621,14 +1633,23 @@ class ReactExoplayerView extends FrameLayout implements
 
             Log.d("Kantar", "kantarTrack config: " + atts.toString());
 
-            stream = sensor.track(
-                new ExoPlayerAdapter(
-                    player, 
-                    themedReactContext, 
-                    kantarConfig.getString(PROP_KANTAR_APPRELEASEVERSION)
-                ), 
-                atts
+            kantarAdapter = new ExoPlayerAdapter(
+                player.getClass().toString(),
+                themedReactContext, 
+                kantarConfig.getString(PROP_KANTAR_APPRELEASEVERSION)
             );
+
+            Format f = player.getVideoFormat();
+
+            if (f != null && f.width > 0) {
+                kantarAdapter.setWidth((int) f.width);
+            }
+
+            if (f != null && f.height > 0) {
+                kantarAdapter.setHeight((int) f.height);
+            }
+
+            stream = sensor.track(kantarAdapter, atts);
         }
     }
 }

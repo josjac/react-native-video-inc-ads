@@ -2,6 +2,7 @@ package com.brentvatne.exoplayer;
 
 import android.content.Context;
 import android.view.WindowManager;
+import android.util.Log;
 
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -9,17 +10,18 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import de.spring.mobile.StreamAdapter;
 
 public class ExoPlayerAdapter implements StreamAdapter {
-    private SimpleExoPlayer player;
     private Context context;
     private String version;
+    private String playerName = "";
+    private int currentPosition = 0;
+    private int currentDuration = 0;
+    private int width = 0;
+    private int height = 0;
 
-    public ExoPlayerAdapter(SimpleExoPlayer player, Context context, String appReleaseVersion) {
-        if (player == null) {
-            throw new NullPointerException("player may be null");
-        }
-        this.player = player;
+    public ExoPlayerAdapter(String playerName, Context context, String appReleaseVersion) {
         this.context = context;
         this.version = appReleaseVersion;
+        this.playerName = playerName;
     }
 
     @Override
@@ -27,7 +29,7 @@ public class ExoPlayerAdapter implements StreamAdapter {
         return new Meta() {
             @Override
             public String getPlayerName() {
-                return player.getClass().toString();
+                return playerName;
             }
 
             @Override
@@ -50,8 +52,10 @@ public class ExoPlayerAdapter implements StreamAdapter {
     @Override
     public int getPosition() {
         try {
-            return (int) Math.round(player.getCurrentPosition()/1000.0);
+            int p = (int) Math.round(this.currentPosition/1000.0);
+            return p;
         } catch(Exception e) {
+            Log.d("2cnt ExoPlayerAdapter.getPosition exception", e.toString());
             return 0;
         }
     }
@@ -59,8 +63,10 @@ public class ExoPlayerAdapter implements StreamAdapter {
     @Override
     public int getDuration() {
         try {
-            return (int) Math.round(player.getDuration()/1000.0);
+            int p = (int) Math.round(this.currentDuration/1000.0);
+            return p;
         } catch(Exception e) {
+            Log.d("2cnt ExoPlayerAdapter.getDuration exception", e.toString());
             return 0;
         }
     }
@@ -68,13 +74,9 @@ public class ExoPlayerAdapter implements StreamAdapter {
     @Override
     public int getWidth() {
         try {
-            Format f =  player.getVideoFormat();
-            if (f != null && f.width > 0) {
-                return f.width;
-            } else {
-                return 0;
-            }
+            return this.width;
         } catch(Exception e) {
+            Log.d("2cnt ExoPlayerAdapter.getWidth exception", e.toString());
             return 0;
         }
     }
@@ -82,13 +84,9 @@ public class ExoPlayerAdapter implements StreamAdapter {
     @Override
     public int getHeight() {
         try {
-            Format f =  player.getVideoFormat();
-            if (f != null && f.width > 0) {
-                return f.height;
-            } else {
-                return 0;
-            }
+            return this.height;
         } catch(Exception e) {
+            Log.d("2cnt ExoPlayerAdapter.getHeight exception", e.toString());
             return 0;
         }
     }
@@ -96,6 +94,22 @@ public class ExoPlayerAdapter implements StreamAdapter {
     @Override
     public boolean isCasting() {
         return false;
+    }
+
+    public void setPosition(int payload) {
+        this.currentPosition = payload;
+    }
+
+    public void setDuration(int payload) {
+        this.currentDuration = payload;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 }
 
