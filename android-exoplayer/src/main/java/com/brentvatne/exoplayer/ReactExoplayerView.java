@@ -156,6 +156,7 @@ class ReactExoplayerView extends FrameLayout implements
     private int bufferForPlaybackAfterRebufferMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS;
 
     private Plugin youboraPlugin;
+    private boolean youboraIsAdapterSet = false;
     private static final String PROP_YOUBORA_ACCOUNTCODE = "accountCode";
     private static final String PROP_YOUBORA_SRC = "src";
     private static final String PROP_YOUBORA_TITLE = "title";
@@ -490,14 +491,6 @@ class ReactExoplayerView extends FrameLayout implements
                                 .setBandwidthMeter(bandwidthMeter)
                                 .setLoadControl(defaultLoadControl)
                                 .build();
-
-                    if (youboraPlugin != null) {
-                        Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
-                        adapter.setCustomEventLogger((MappingTrackSelector) trackSelector);
-                        adapter.setBandwidthMeter(bandwidthMeter);
-                        youboraPlugin.setAdapter(adapter);
-                    }
-
                     player.addListener(self);
                     player.addMetadataOutput(self);
                     adsLoader.setPlayer(player);
@@ -511,6 +504,15 @@ class ReactExoplayerView extends FrameLayout implements
                     player.setPlaybackParameters(params);
 
                     kantarTrack();
+
+                    if (youboraPlugin != null && youboraIsAdapterSet == false) {
+                        Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
+                        adapter.setCustomEventLogger((MappingTrackSelector) trackSelector);
+                        adapter.setBandwidthMeter(bandwidthMeter);
+                        youboraPlugin.setAdapter(adapter);
+                        youboraIsAdapterSet = true;
+                        Log.d("Youbora", "youboraPlugin.setAdapter");
+                    }
                 }
                 if (playerNeedsSource && srcUri != null) {
                     exoPlayerView.invalidateAspectRatio();
@@ -558,6 +560,7 @@ class ReactExoplayerView extends FrameLayout implements
                     player.setMediaItem(mediaItem);
                     player.prepare();
                     playerNeedsSource = false;
+                    Log.d("Youbora", "src:" + srcUri);
 
                     reLayout(exoPlayerView);
                     eventEmitter.loadStart();
@@ -668,6 +671,7 @@ class ReactExoplayerView extends FrameLayout implements
 
         if (youboraPlugin != null) {
             youboraPlugin.fireStop();
+            Log.d("Youbora", "youboraPlugin.fireStop");
         }
 
         kantarUnload();
@@ -1555,8 +1559,14 @@ class ReactExoplayerView extends FrameLayout implements
                     youboraConfig.getString(PROP_YOUBORA_CUSTOMDIMENSION3)
                 );
             }
+            youboraOptions.setNonFatalErrors(new String[] {
+                "com.google.android.exoplayer2.upstream.HttpDataSource$InvalidResponseCodeException",
+                "com.google.android.exoplayer2.upstream.HttpDataSource$HttpDataSourceException"
+            });
+            youboraIsAdapterSet = false;
             youboraPlugin = new Plugin(youboraOptions, getContext());
             youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
+            Log.d("Youbora", "youboraPlugin");
         }
     }
 
