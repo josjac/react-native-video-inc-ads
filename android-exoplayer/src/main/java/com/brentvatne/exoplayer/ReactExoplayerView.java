@@ -314,9 +314,9 @@ class ReactExoplayerView extends FrameLayout implements
         if (!playInBackground || !isInBackground) {
             setPlayWhenReady(!isPaused);
         }
+        Log.d("KantarSpring", "onHostResume");
         kantarTrack();
         isInBackground = false;
-        Log.d("Kantar", "onHostResume");
     }
 
     @Override
@@ -327,17 +327,15 @@ class ReactExoplayerView extends FrameLayout implements
         }
         setPlayWhenReady(false);
 
-        kantarStop();
+        Log.d("KantarSpring", "onHostPause");
 
-        Log.d("Kantar", "onHostPause");
+        kantarStop();
     }
 
     @Override
     public void onHostDestroy() {
         stopPlayback();
         adsLoader.release();
-        kantarUnload();
-        Log.d("Kantar", "onHostDestroy");
     }
 
     public void cleanUpResources() {
@@ -503,6 +501,7 @@ class ReactExoplayerView extends FrameLayout implements
                     PlaybackParameters params = new PlaybackParameters(rate, 1f);
                     player.setPlaybackParameters(params);
 
+                    Log.d("KantarSpring", "initializePlayer");
                     kantarTrack();
 
                     if (youboraPlugin != null && youboraIsAdapterSet == false) {
@@ -571,6 +570,7 @@ class ReactExoplayerView extends FrameLayout implements
                 initializePlayerControl();
                 setControls(controls);
                 applyModifiers();
+
             }
         }, 1);
     }
@@ -673,8 +673,6 @@ class ReactExoplayerView extends FrameLayout implements
             youboraPlugin.fireStop();
             Log.d("Youbora", "youboraPlugin.fireStop");
         }
-
-        kantarUnload();
 
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
@@ -1572,7 +1570,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setKantar(@Nullable ReadableMap config) {
         this.kantarConfig = config;
-        Log.d("Kantar", "config: " + config.toString());
+        Log.d("KantarSpring", "setKantar config: " + config.toString());
         if (kantarConfig.hasKey(PROP_KANTAR_SITE) && kantarConfig.hasKey(PROP_KANTAR_APPNAME)) {
             if (sensor == null) {
                 sensor = SpringStreams.getInstance(
@@ -1584,7 +1582,7 @@ class ReactExoplayerView extends FrameLayout implements
                 if (kantarConfig.hasKey(PROP_KANTAR_DEBUG)) {
                     sensor.setDebug(true);
                 }
-                Log.d("Kantar", "create sensor " + sensor.toString());
+                Log.d("KantarSpring", "create sensor " + sensor.toString());
             }
         }
 
@@ -1593,23 +1591,28 @@ class ReactExoplayerView extends FrameLayout implements
     public void kantarStop() {
         if (stream != null) {
             stream.stop();
-            Log.d("Kantar", "stream.stop()");
+            stream = null;
+            Log.d("KantarSpring", "stream.stop()");
+        } else {
+            Log.d("KantarSpring", "kantarStop: no stream");
         }
     }
 
     public void kantarUnload() {
-        kantarStop();
-
         if (sensor != null) {
             sensor.unload();
             sensor = null;
             stream = null;
+            Log.d("KantarSpring", "kantarUnload");
+        } else {
+            Log.d("KantarSpring", "kantarUnload: no sensor");
         }
     }
 
     public void kantarTrack() {
         if (sensor != null && player != null) {
             Map<String, Object> atts = new HashMap<String, Object>();
+            boolean isLive = false;
 
             if (kantarConfig.hasKey(PROP_KANTAR_SITE)) {
                 atts.put("sitename", kantarConfig.getString(PROP_KANTAR_SITE));
@@ -1631,6 +1634,9 @@ class ReactExoplayerView extends FrameLayout implements
 
             if (kantarConfig.hasKey(PROP_KANTAR_STREAM)) {
                 atts.put("stream", kantarConfig.getString(PROP_KANTAR_STREAM));
+                if (kantarConfig.getString(PROP_KANTAR_STREAM).equals("live/12")) {
+                    isLive = true;
+                }
             }
 
             if (kantarConfig.hasKey(PROP_KANTAR_DEVICETYPE)) {
@@ -1641,10 +1647,17 @@ class ReactExoplayerView extends FrameLayout implements
                 atts.put("dur", kantarConfig.getString(PROP_KANTAR_CONTENTDURATION));
             }
 
-            Log.d("Kantar", "kantarTrack config: " + atts.toString());
+            Log.d("KantarSpring", "kantarTrack config: " + atts.toString());
+            Log.d("KantarSpring", "stream " + kantarConfig.getString(PROP_KANTAR_STREAM));
+            Log.d("KantarSpring", "stream type " + kantarConfig.getString(PROP_KANTAR_STREAM).getClass().getName());
+
+            if (isLive) {
+                Log.d("KantarSpring", "live");
+            }
 
             kantarAdapter = new ExoPlayerAdapter(
                 player.getClass().toString(),
+                isLive,
                 themedReactContext, 
                 kantarConfig.getString(PROP_KANTAR_APPRELEASEVERSION)
             );
@@ -1659,7 +1672,11 @@ class ReactExoplayerView extends FrameLayout implements
                 kantarAdapter.setHeight((int) f.height);
             }
 
+            kantarStop();
+
             stream = sensor.track(kantarAdapter, atts);
+        } else {
+            Log.d("KantarSpring", "kantarTrack no sensor o no player");
         }
     }
 }
