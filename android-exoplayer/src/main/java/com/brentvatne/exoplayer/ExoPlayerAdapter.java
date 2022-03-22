@@ -17,7 +17,7 @@ public class ExoPlayerAdapter implements StreamAdapter {
     private int currentDuration = 0;
     private int width = 0;
     private int height = 0;
-    private boolean isLive = false;
+    public boolean isLive = false;
 
     public ExoPlayerAdapter(String playerName, boolean isLive, Context context, String appReleaseVersion) {
         this.context = context;

@@ -234,8 +234,17 @@ class ReactExoplayerView extends FrameLayout implements
                         sendMessageDelayed(msg, Math.round(mProgressUpdateInterval));
 
                         if (kantarAdapter != null) {
-                            kantarAdapter.setPosition((int) pos);
                             kantarAdapter.setDuration((int) player.getDuration());
+                            if (kantarAdapter.isLive == true) {
+                                long _pos = 0;
+                                Timeline currentTimeline = player.getCurrentTimeline();
+                                if (!currentTimeline.isEmpty()) {
+                                  _pos -= currentTimeline.getPeriod(player.getCurrentPeriodIndex(), new Timeline.Period()).getPositionInWindowMs();
+                                }
+                                kantarAdapter.setPosition((int) _pos);
+                            } else {
+                                kantarAdapter.setPosition((int) pos);
+                            }
                         }
                     }
                     break;
