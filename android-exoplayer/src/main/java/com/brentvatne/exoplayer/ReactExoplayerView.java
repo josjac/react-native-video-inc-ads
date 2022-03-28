@@ -498,6 +498,17 @@ class ReactExoplayerView extends FrameLayout implements
                                 .setBandwidthMeter(bandwidthMeter)
                                 .setLoadControl(defaultLoadControl)
                                 .build();
+
+
+                    if (youboraPlugin != null && youboraIsAdapterSet == false) {
+                        Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
+                        adapter.setCustomEventLogger((MappingTrackSelector) trackSelector);
+                        adapter.setBandwidthMeter(bandwidthMeter);
+                        youboraPlugin.setAdapter(adapter);
+                        youboraIsAdapterSet = true;
+                        Log.d("Youbora", "youboraPlugin.setAdapter");
+                    }
+
                     player.addListener(self);
                     player.addMetadataOutput(self);
                     adsLoader.setPlayer(player);
@@ -512,15 +523,6 @@ class ReactExoplayerView extends FrameLayout implements
 
                     Log.d("KantarSpring", "initializePlayer");
                     kantarTrack();
-
-                    if (youboraPlugin != null && youboraIsAdapterSet == false) {
-                        Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
-                        adapter.setCustomEventLogger((MappingTrackSelector) trackSelector);
-                        adapter.setBandwidthMeter(bandwidthMeter);
-                        youboraPlugin.setAdapter(adapter);
-                        youboraIsAdapterSet = true;
-                        Log.d("Youbora", "youboraPlugin.setAdapter");
-                    }
                 }
                 if (playerNeedsSource && srcUri != null) {
                     exoPlayerView.invalidateAspectRatio();
@@ -582,6 +584,7 @@ class ReactExoplayerView extends FrameLayout implements
 
             }
         }, 1);
+        Log.d("Youbora", "initializePlayer");
     }
 
     private DrmSessionManager buildDrmSessionManager(UUID uuid,
@@ -1081,11 +1084,15 @@ class ReactExoplayerView extends FrameLayout implements
         }
         eventEmitter.error(errorString, ex);
         playerNeedsSource = true;
-        if (isBehindLiveWindow(e)) {
-            clearResumePosition();
-            initializePlayer();
-        } else {
-            updateResumePosition();
+
+        if (e.type != ExoPlaybackException.TYPE_SOURCE) {
+          if (isBehindLiveWindow(e)) {
+              clearResumePosition();
+              initializePlayer();
+          } else {
+              updateResumePosition();
+          }
+        }
         }
     }
 
