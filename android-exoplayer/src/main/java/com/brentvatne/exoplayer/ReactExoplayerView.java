@@ -170,7 +170,6 @@ class ReactExoplayerView extends FrameLayout implements
 
     private static SpringStreams sensor;
     private static Stream stream;
-    private static ExoPlayerAdapter kantarAdapter;
     private static final String PROP_KANTAR_SITE = "site";
     private static final String PROP_KANTAR_APPNAME = "appname";
     private static final String PROP_KANTAR_STREAM = "stream";
@@ -232,20 +231,6 @@ class ReactExoplayerView extends FrameLayout implements
                         eventEmitter.progressChanged(pos, bufferedDuration, player.getDuration(), getPositionInFirstPeriodMsForCurrentWindow(pos));
                         msg = obtainMessage(SHOW_PROGRESS);
                         sendMessageDelayed(msg, Math.round(mProgressUpdateInterval));
-
-                        if (kantarAdapter != null) {
-                            kantarAdapter.setDuration((int) player.getDuration());
-                            if (kantarAdapter.isLive == true) {
-                                long _pos = 0;
-                                Timeline currentTimeline = player.getCurrentTimeline();
-                                if (!currentTimeline.isEmpty()) {
-                                  _pos -= currentTimeline.getPeriod(player.getCurrentPeriodIndex(), new Timeline.Period()).getPositionInWindowMs();
-                                }
-                                kantarAdapter.setPosition((int) _pos);
-                            } else {
-                                kantarAdapter.setPosition((int) pos);
-                            }
-                        }
                     }
                     break;
             }
@@ -323,8 +308,6 @@ class ReactExoplayerView extends FrameLayout implements
         if (!playInBackground || !isInBackground) {
             setPlayWhenReady(!isPaused);
         }
-        Log.d("KantarSpring", "onHostResume");
-        kantarTrack();
         isInBackground = false;
     }
 
@@ -335,10 +318,6 @@ class ReactExoplayerView extends FrameLayout implements
             return;
         }
         setPlayWhenReady(false);
-
-        Log.d("KantarSpring", "onHostPause");
-
-        kantarStop();
     }
 
     @Override
@@ -522,6 +501,7 @@ class ReactExoplayerView extends FrameLayout implements
                     player.setPlaybackParameters(params);
 
                     Log.d("KantarSpring", "initializePlayer");
+                    kantarLoad();
                     kantarTrack();
                 }
                 if (playerNeedsSource && srcUri != null) {
@@ -673,6 +653,8 @@ class ReactExoplayerView extends FrameLayout implements
 
     private void releasePlayer() {
         if (player != null) {
+            Log.d("KantarSpring", "releasePlayer");
+            kantarUnload();
             adsLoader.setPlayer(null);
             updateResumePosition();
             player.release();
@@ -1092,7 +1074,6 @@ class ReactExoplayerView extends FrameLayout implements
           } else {
               updateResumePosition();
           }
-        }
         }
     }
 
@@ -1586,35 +1567,28 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setKantar(@Nullable ReadableMap config) {
         this.kantarConfig = config;
-        Log.d("KantarSpring", "setKantar config: " + config.toString());
-        if (kantarConfig.hasKey(PROP_KANTAR_SITE) && kantarConfig.hasKey(PROP_KANTAR_APPNAME)) {
-            if (sensor == null) {
-                sensor = SpringStreams.getInstance(
-                    kantarConfig.getString(PROP_KANTAR_SITE),
-                    kantarConfig.getString(PROP_KANTAR_APPNAME), 
-                    themedReactContext.getReactApplicationContext()
-                );
+        Log.d("KantarSpring", "setKantar: " + config.toString());
+    }
 
-                if (kantarConfig.hasKey(PROP_KANTAR_DEBUG)) {
-                    sensor.setDebug(true);
+    private void kantarLoad() {
+        if (kantarConfig != null) {
+            if (kantarConfig.hasKey(PROP_KANTAR_SITE) && kantarConfig.hasKey(PROP_KANTAR_APPNAME)) {
+                if (sensor == null) {
+                    sensor = SpringStreams.getInstance(
+                        kantarConfig.getString(PROP_KANTAR_SITE),
+                        kantarConfig.getString(PROP_KANTAR_APPNAME),
+                        themedReactContext.getReactApplicationContext()
+                    );
+                    if (kantarConfig.hasKey(PROP_KANTAR_DEBUG)) {
+                        sensor.setDebug(true);
+                    }
+                    Log.d("KantarSpring", "kantarLoad: " + sensor.toString());
                 }
-                Log.d("KantarSpring", "create sensor " + sensor.toString());
             }
         }
-
     }
 
-    public void kantarStop() {
-        if (stream != null) {
-            stream.stop();
-            stream = null;
-            Log.d("KantarSpring", "stream.stop()");
-        } else {
-            Log.d("KantarSpring", "kantarStop: no stream");
-        }
-    }
-
-    public void kantarUnload() {
+    private void kantarUnload() {
         if (sensor != null) {
             sensor.unload();
             sensor = null;
@@ -1625,22 +1599,10 @@ class ReactExoplayerView extends FrameLayout implements
         }
     }
 
-    public void kantarTrack() {
+    private void kantarTrack() {
         if (sensor != null && player != null) {
+            boolean isLiveStream = false;
             Map<String, Object> atts = new HashMap<String, Object>();
-            boolean isLive = false;
-
-            if (kantarConfig.hasKey(PROP_KANTAR_SITE)) {
-                atts.put("sitename", kantarConfig.getString(PROP_KANTAR_SITE));
-            }
-
-            if (kantarConfig.hasKey(PROP_KANTAR_APPNAME)) {
-                atts.put("pl", kantarConfig.getString(PROP_KANTAR_APPNAME));
-            }
-
-            if (kantarConfig.hasKey(PROP_KANTAR_APPRELEASEVERSION)) {
-                atts.put("plv", kantarConfig.getString(PROP_KANTAR_APPRELEASEVERSION));
-            }
 
             if (kantarConfig.hasKey(PROP_KANTAR_CONTENTID)) {
                 atts.put("cq", kantarConfig.getString(PROP_KANTAR_CONTENTID));
@@ -1648,51 +1610,44 @@ class ReactExoplayerView extends FrameLayout implements
                 atts.put("cq", null);
             }
 
-            if (kantarConfig.hasKey(PROP_KANTAR_STREAM)) {
-                atts.put("stream", kantarConfig.getString(PROP_KANTAR_STREAM));
-                if (kantarConfig.getString(PROP_KANTAR_STREAM).equals("live/12")) {
-                    isLive = true;
-                }
-            }
-
             if (kantarConfig.hasKey(PROP_KANTAR_DEVICETYPE)) {
                 atts.put("ct", kantarConfig.getString(PROP_KANTAR_DEVICETYPE));
             }
 
-            if (kantarConfig.hasKey(PROP_KANTAR_CONTENTDURATION)) {
-                atts.put("dur", kantarConfig.getString(PROP_KANTAR_CONTENTDURATION));
+            if (kantarConfig.hasKey(PROP_KANTAR_SITE)) {
+                atts.put("sitename", kantarConfig.getString(PROP_KANTAR_SITE));
             }
 
-            Log.d("KantarSpring", "kantarTrack config: " + atts.toString());
-            Log.d("KantarSpring", "stream " + kantarConfig.getString(PROP_KANTAR_STREAM));
-            Log.d("KantarSpring", "stream type " + kantarConfig.getString(PROP_KANTAR_STREAM).getClass().getName());
-
-            if (isLive) {
-                Log.d("KantarSpring", "live");
+            if (kantarConfig.hasKey(PROP_KANTAR_STREAM)) {
+                atts.put("stream", kantarConfig.getString(PROP_KANTAR_STREAM));
+                if (kantarConfig.getString(PROP_KANTAR_STREAM).contains("live/12")) {
+                    isLiveStream = true;
+                }
             }
 
-            kantarAdapter = new ExoPlayerAdapter(
-                player.getClass().toString(),
-                isLive,
-                themedReactContext, 
-                kantarConfig.getString(PROP_KANTAR_APPRELEASEVERSION)
+            Log.d("KantarSpring", "kantarTrack: " + atts);
+
+            ExoPlayerAdapter kantarAdapter = new ExoPlayerAdapter(
+                    player,
+                    kantarConfig.getString(PROP_KANTAR_APPRELEASEVERSION),
+                    isLiveStream,
+                    themedReactContext
             );
-
-            Format f = player.getVideoFormat();
-
-            if (f != null && f.width > 0) {
-                kantarAdapter.setWidth((int) f.width);
-            }
-
-            if (f != null && f.height > 0) {
-                kantarAdapter.setHeight((int) f.height);
-            }
-
             kantarStop();
-
             stream = sensor.track(kantarAdapter, atts);
+            Log.d("KantarSpring", "kantarTrack: " + stream.toString());
         } else {
-            Log.d("KantarSpring", "kantarTrack no sensor o no player");
+            Log.d("KantarSpring", "kantarTrack: no senser or no player");
+        }
+    }
+
+    private void kantarStop() {
+        if (stream != null) {
+            stream.stop();
+            stream = null;
+            Log.d("KantarSpring", "kantarStop");
+        } else {
+            Log.d("KantarSpring", "kantarStop: no stream");
         }
     }
 }
