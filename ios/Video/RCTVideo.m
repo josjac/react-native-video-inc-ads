@@ -259,7 +259,6 @@ static int const RCTVideoUnset = -1;
     [_playerLayer setPlayer:nil];
     [_playerViewController setPlayer:nil];
   }
-  [self kantarStop];
 }
 
 - (void)applicationWillEnterForeground:(NSNotification *)notification
@@ -269,7 +268,6 @@ static int const RCTVideoUnset = -1;
     [_playerLayer setPlayer:_player];
     [_playerViewController setPlayer:_player];
   }
-  [self kantarTrack];
 }
 
 #pragma mark - Audio events
@@ -428,8 +426,10 @@ static int const RCTVideoUnset = -1;
 
       if (self->plugin != nil) {
         [self->plugin setAdapter:[[YBAVPlayerAdapter alloc] initWithPlayer:_player]];
+        [self->plugin fireInit];
       }
 
+      [self kantarLoad];
       [self kantarTrack];
 
       //Perform on next run loop, otherwise onVideoLoadStart is nil
@@ -505,6 +505,9 @@ static int const RCTVideoUnset = -1;
 
 - (void)setKantar:(NSDictionary *)kantar {
   _kantar = kantar;
+}
+
+- (void)kantarLoad {
   NSLog(@"KMA_SpringStreams setKantar config: %@", _kantar);
   if ([self->_kantar objectForKey:@"site"] && [self->_kantar objectForKey:@"appname"]) {
     if (!self->kantarSensor) {
@@ -523,25 +526,14 @@ static int const RCTVideoUnset = -1;
   }
 }
 
-- (void)kantarStop {
-  NSLog(@"KMA_SpringStreams kantarStop");
-
-  if (self->kantarStream) {
-    [self->kantarStream stop];
-    NSLog(@"KMA_SpringStreams kantarStream stop");
-  }
-}
-
 - (void)kantarUnload {
-  NSLog(@"KMA_SpringStreams kantarUnload");
-
-  [self kantarStop];
-  
   if (self->kantarSensor) {
     [self->kantarSensor unload];
     self->kantarSensor = nil;
     self->kantarStream = nil;
-    NSLog(@"KMA_SpringStreams kantarUnload unload");
+    NSLog(@"KMA_SpringStreams kantarUnload");
+  } else {
+    NSLog(@"KMA_SpringStreams kantarUnload: no sensor");
   }
 }
 
@@ -550,36 +542,50 @@ static int const RCTVideoUnset = -1;
 
   if (self->kantarSensor && self->_player) {
     
-    KMA_MediaPlayerAdapter *adapter = [[KMA_MediaPlayerAdapter alloc] adapter:_playerViewController];
     NSMutableDictionary *atts = [[NSMutableDictionary alloc] init];
                                        
-    if ([self->_kantar objectForKey:@"site"]) {
-      [atts setObject:[self->_kantar objectForKey:@"site"] forKey:@"sitename"];
-    }
-    if ([self->_kantar objectForKey:@"appname"]) {
-      [atts setObject:[self->_kantar objectForKey:@"appname"] forKey:@"pl"];
-    }
-    if ([self->_kantar objectForKey:@"appReleaseVersion"]) {
-      [atts setObject:[self->_kantar objectForKey:@"appReleaseVersion"] forKey:@"plv"];
-    }
     if ([self->_kantar objectForKey:@"contentId"]) {
       [atts setObject:[self->_kantar objectForKey:@"contentId"] forKey:@"cq"];
+    } else {
+      [atts setObject:@"null" forKey:@"cq"];
     }
-    if ([self->_kantar objectForKey:@"stream"]) {
-      [atts setObject:[self->_kantar objectForKey:@"stream"] forKey:@"stream"];
-    }
+
     if ([self->_kantar objectForKey:@"deviceType"]) {
       [atts setObject:[self->_kantar objectForKey:@"deviceType"] forKey:@"ct"];
     }
-    if ([self->_kantar objectForKey:@"contentDuration"]) {
-      [atts setObject:[self->_kantar objectForKey:@"contentDuration"] forKey:@"dur"];
+
+    if ([self->_kantar objectForKey:@"site"]) {
+      [atts setObject:[self->_kantar objectForKey:@"site"] forKey:@"sitename"];
     }
+
+    if ([self->_kantar objectForKey:@"stream"]) {
+      [atts setObject:[self->_kantar objectForKey:@"stream"] forKey:@"stream"];
+    }
+
     
-    NSLog(@"KMA_SpringStreams kantarTrack createtrack %@", atts);
-    
+    NSLog(@"KMA_SpringStreams kantarTrack: %@", atts);
+
+    KMA_MediaPlayerAdapter *adapter = [[KMA_MediaPlayerAdapter alloc] adapter:_playerViewController];
+
+    [self kantarStop];
     self->kantarStream = [self->kantarSensor track:adapter atts:atts];
+  } else {
+    NSLog(@"KMA_SpringStreams kantarTrack: no senser or no player");
   }
 }
+
+- (void)kantarStop {
+  if (self->kantarStream) {
+    [self->kantarStream stop];
+    self->kantarStream = nil;
+
+    NSLog(@"KMA_SpringStreams kantarStop");
+  } else {
+    NSLog(@"KMA_SpringStreams kantarStop: no stream");
+  }
+}
+
+
 
 - (void)setDrm:(NSDictionary *)drm {
   _drm = drm;
