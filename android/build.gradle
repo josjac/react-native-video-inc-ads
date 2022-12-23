@@ -8,19 +8,61 @@ android {
     compileSdkVersion safeExtGet('compileSdkVersion', 28)
     buildToolsVersion safeExtGet('buildToolsVersion', '28.0.3')
 
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+    }
+
     defaultConfig {
         minSdkVersion safeExtGet('minSdkVersion', 16)
         targetSdkVersion safeExtGet('targetSdkVersion', 28)
         versionCode 1
         versionName "1.0"
-        ndk {
-            abiFilters "armeabi-v7a", "x86"
-        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
+repositories {
+    maven { url  "https://npaw.jfrog.io/artifactory/youbora/" }
+}
+
 dependencies {
-    //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:${safeExtGet('reactNativeVersion', '+')}"
-    implementation 'com.yqritc:android-scalablevideoview:1.0.4'
+    def exoplayerVersion = '2.13.3'
+    implementation("com.google.android.exoplayer:exoplayer:${exoplayerVersion}") {
+        exclude group: 'com.android.support'
+    }
+
+    // All support libs must use the same version
+    implementation "androidx.annotation:annotation:1.1.0"
+    implementation "androidx.core:core:1.1.0"
+    implementation "androidx.media:media:1.1.0"
+
+    implementation("com.google.android.exoplayer:extension-okhttp:${exoplayerVersion}") {
+        exclude group: 'com.squareup.okhttp3', module: 'okhttp'
+    }
+
+    implementation "com.google.android.exoplayer:extension-ima:${exoplayerVersion}"
+
+    implementation 'com.squareup.okhttp3:okhttp:${OKHTTP_VERSION}'
+
+    // youbora
+    implementation 'com.nicepeopleatwork:configutil:0.4.7'
+    implementation "com.nicepeopleatwork:exoplayer-adapter:6.7.23"
+
+    // kantar
+    // instalar libreria a nivel de proyecto
+    // /android/kantar
+    //   -- build.gradle
+    //   -- kantarmedia-streaming-android-demo-1.8.1.aar
+    // agregar en: /android/kantar/build.gradle
+    //   configurations.maybeCreate("default")
+    //   artifacts.add("default", file('kantarmedia-streaming-android-demo-1.8.1.aar'))
+    // agregar en /android/settings.gradle
+    //  include ':kantar'
+    implementation project(":kantar")
 }

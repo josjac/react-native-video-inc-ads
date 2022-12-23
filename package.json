@@ -50,7 +50,6 @@
         "lint": "yarn eslint *.js"
     },
     "files": [
-        "android-exoplayer",
         "android",
         "dom",
         "ios",
