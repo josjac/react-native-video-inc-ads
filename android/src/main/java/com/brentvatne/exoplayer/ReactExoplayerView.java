@@ -1542,7 +1542,13 @@ class ReactExoplayerView extends FrameLayout implements
                 );
             }
             if (youboraConfig.hasKey(PROP_YOUBORA_IS_LIVE)) {
-                youboraOptions.setContentIsLive(true);
+                if (youboraConfig.getBoolean(PROP_YOUBORA_IS_LIVE)) {
+                  youboraOptions.setContentIsLive(true);
+                  Log.d("Youbora", "setContentIsLive(true)");
+                } else {
+                  youboraOptions.setContentIsLive(false);
+                  Log.d("Youbora", "setContentIsLive(false)");
+                }
             }
             if (youboraConfig.hasKey(PROP_YOUBORA_CUSTOMDIMENSION1)) {
                 youboraOptions.setContentCustomDimension1(
