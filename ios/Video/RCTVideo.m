@@ -470,7 +470,7 @@ static int const RCTVideoUnset = -1;
     if ([self->_youbora objectForKey:@"appName"]) {
       options.appName = [self->_youbora objectForKey:@"appName"];
     }
-    
+
     if ([self->_youbora objectForKey:@"appReleaseVersion"]) {
       options.appReleaseVersion = [self->_youbora objectForKey:@"appReleaseVersion"];
     }
@@ -480,7 +480,13 @@ static int const RCTVideoUnset = -1;
     }
     
     if ([self->_youbora objectForKey:@"isLive"]) {
-      options.contentIsLive = [[NSNumber alloc] initWithBool: true];
+      if ([[self->_youbora objectForKey:@"isLive"] boolValue] == true) {
+        options.contentIsLive = [[NSNumber alloc] initWithBool: true];
+        NSLog(@"youbora contentIsLive: true - %@", [self->_youbora objectForKey:@"isLive"]);
+      } else {
+        options.contentIsLive = [[NSNumber alloc] initWithBool: false];
+        NSLog(@"youbora contentIsLive: false - %@", [self->_youbora objectForKey:@"isLive"]);
+      }
     }
     
     if ([self->_youbora objectForKey:@"username"]) {
@@ -491,6 +497,10 @@ static int const RCTVideoUnset = -1;
       options.customDimension1 = [self->_youbora objectForKey:@"customDimension1"];
     }
       
+    if ([self->_youbora objectForKey:@"customDimension2"]) {
+      options.customDimension2 = [self->_youbora objectForKey:@"customDimension2"];
+    }
+
     if ([self->_youbora objectForKey:@"customDimension3"]) {
       options.customDimension3 = [self->_youbora objectForKey:@"customDimension3"];
     }

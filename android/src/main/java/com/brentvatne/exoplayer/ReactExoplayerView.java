@@ -166,6 +166,7 @@ class ReactExoplayerView extends FrameLayout implements
     private static final String PROP_YOUBORA_USERNAME = "username";
     private static final String PROP_YOUBORA_PROGRAM = "program";
     private static final String PROP_YOUBORA_CUSTOMDIMENSION1 = "customDimension1";
+    private static final String PROP_YOUBORA_CUSTOMDIMENSION2 = "customDimension2";
     private static final String PROP_YOUBORA_CUSTOMDIMENSION3 = "customDimension3";
 
     private static SpringStreams sensor;
@@ -1553,6 +1554,11 @@ class ReactExoplayerView extends FrameLayout implements
             if (youboraConfig.hasKey(PROP_YOUBORA_CUSTOMDIMENSION1)) {
                 youboraOptions.setContentCustomDimension1(
                     youboraConfig.getString(PROP_YOUBORA_CUSTOMDIMENSION1)
+                );
+            }
+            if (youboraConfig.hasKey(PROP_YOUBORA_CUSTOMDIMENSION2)) {
+                youboraOptions.setContentCustomDimension2(
+                    youboraConfig.getString(PROP_YOUBORA_CUSTOMDIMENSION2)
                 );
             }
             if (youboraConfig.hasKey(PROP_YOUBORA_CUSTOMDIMENSION3)) {
