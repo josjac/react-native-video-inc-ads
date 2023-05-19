@@ -79,6 +79,7 @@ import com.google.ads.interactivemedia.v3.api.AdEvent;
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
 import com.google.android.exoplayer2.source.MediaSourceFactory;
 
+import com.npaw.ima.ImaAdapter;
 import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
 import com.npaw.youbora.lib6.plugin.Options;
 import com.npaw.youbora.lib6.plugin.Plugin;
@@ -165,9 +166,12 @@ class ReactExoplayerView extends FrameLayout implements
     private static final String PROP_YOUBORA_IS_LIVE = "isLive";
     private static final String PROP_YOUBORA_USERNAME = "username";
     private static final String PROP_YOUBORA_PROGRAM = "program";
+    private static final String PROP_YOUBORA_ADRESOURCE = "adResource";
+
     private static final String PROP_YOUBORA_CUSTOMDIMENSION1 = "customDimension1";
     private static final String PROP_YOUBORA_CUSTOMDIMENSION2 = "customDimension2";
     private static final String PROP_YOUBORA_CUSTOMDIMENSION3 = "customDimension3";
+    private static final String PROP_YOUBORA_SEASONNAME = "seasonName";
 
     private static SpringStreams sensor;
     private static Stream stream;
@@ -484,6 +488,14 @@ class ReactExoplayerView extends FrameLayout implements
                         Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
                         adapter.setCustomEventLogger((MappingTrackSelector) trackSelector);
                         adapter.setBandwidthMeter(bandwidthMeter);
+
+                        if (adTagUrl != null) {
+                          ImaAdapter adapterAd = new ImaAdapter();
+                          adsLoader = new ImaAdsLoader.Builder(themedReactContext).setAdEventListener(adapterAd)
+                            .setAdErrorListener(adapterAd).build();
+                          youboraPlugin.setAdsAdapter(adapterAd);
+                        }
+
                         youboraPlugin.setAdapter(adapter);
                         youboraIsAdapterSet = true;
                         Log.d("Youbora", "youboraPlugin.setAdapter");
@@ -666,6 +678,7 @@ class ReactExoplayerView extends FrameLayout implements
 
         if (youboraPlugin != null) {
             youboraPlugin.fireStop();
+            youboraPlugin.removeAdapter();
             Log.d("Youbora", "youboraPlugin.fireStop");
         }
 
@@ -1542,6 +1555,11 @@ class ReactExoplayerView extends FrameLayout implements
                     youboraConfig.getString(PROP_YOUBORA_PROGRAM)
                 );
             }
+            if (youboraConfig.hasKey(PROP_YOUBORA_ADRESOURCE)) {
+                youboraOptions.setAdResource(
+                    youboraConfig.getString(PROP_YOUBORA_ADRESOURCE)
+                );
+            }
             if (youboraConfig.hasKey(PROP_YOUBORA_IS_LIVE)) {
                 if (youboraConfig.getBoolean(PROP_YOUBORA_IS_LIVE)) {
                   youboraOptions.setContentIsLive(true);
@@ -1566,6 +1584,17 @@ class ReactExoplayerView extends FrameLayout implements
                     youboraConfig.getString(PROP_YOUBORA_CUSTOMDIMENSION3)
                 );
             }
+            if (youboraConfig.hasKey(PROP_YOUBORA_SEASONNAME)) {
+              youboraOptions.setContentCustomDimension6(
+                youboraConfig.getString(PROP_YOUBORA_SEASONNAME)
+              );
+            }
+            if (youboraConfig.hasKey(PROP_YOUBORA_PROGRAM)) {
+              youboraOptions.setContentCustomDimension5(
+                youboraConfig.getString(PROP_YOUBORA_PROGRAM)
+              );
+            }
+
             youboraOptions.setNonFatalErrors(new String[] {
                 "com.google.android.exoplayer2.upstream.HttpDataSource$InvalidResponseCodeException",
                 "com.google.android.exoplayer2.upstream.HttpDataSource$HttpDataSourceException"

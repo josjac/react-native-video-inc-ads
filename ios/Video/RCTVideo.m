@@ -6,6 +6,7 @@
 #include <MediaAccessibility/MediaAccessibility.h>
 #include <AVFoundation/AVFoundation.h>
 #import <YouboraAVPlayerAdapter/YouboraAVPlayerAdapter.h>
+#import <YouboraIMAAdapter/YBIMAAdapter.h>
 #import <YouboraLib/YouboraLib.h>
 #import "KMA_SpringStreams.h"
 
@@ -227,17 +228,17 @@ static int const RCTVideoUnset = -1;
 
 - (void)dealloc
 {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
-  [self removePlayerLayer];
-  [self removePlayerItemObservers];
-  [_player removeObserver:self forKeyPath:playbackRate context:nil];
-  [_player removeObserver:self forKeyPath:externalPlaybackActive context: nil];
-
   if (self->plugin != nil) {
     [self->plugin fireStop];
     [self->plugin removeAdapter];
     [self->plugin removeAdsAdapter];
   }
+
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [self removePlayerLayer];
+  [self removePlayerItemObservers];
+  [_player removeObserver:self forKeyPath:playbackRate context:nil];
+  [_player removeObserver:self forKeyPath:externalPlaybackActive context: nil];
 
   [self kantarUnload];
 }
@@ -426,7 +427,12 @@ static int const RCTVideoUnset = -1;
 
       if (self->plugin != nil) {
         [self->plugin setAdapter:[[YBAVPlayerAdapter alloc] initWithPlayer:_player]];
+        [self->plugin setAdsAdapter:[[YBIMAAdapter alloc] initWithPlayer:self.adsManager]];
         [self->plugin fireInit];
+
+        if (_adTagUrl != nil) {
+          [self->plugin.adsAdapter fireAdInit];
+        }
       }
 
       [self kantarLoad];
@@ -478,6 +484,10 @@ static int const RCTVideoUnset = -1;
     if ([self->_youbora objectForKey:@"program"]) {
       options.program = [self->_youbora objectForKey:@"program"];
     }
+
+    if ([self->_youbora objectForKey:@"adResource"]) {
+      options.adResource = [self->_youbora objectForKey:@"adResource"];
+    }
     
     if ([self->_youbora objectForKey:@"isLive"]) {
       if ([[self->_youbora objectForKey:@"isLive"] boolValue] == true) {
@@ -503,6 +513,14 @@ static int const RCTVideoUnset = -1;
 
     if ([self->_youbora objectForKey:@"customDimension3"]) {
       options.customDimension3 = [self->_youbora objectForKey:@"customDimension3"];
+    }
+
+    if ([self->_youbora objectForKey:@"program"]) {
+      options.customDimension5 = [self->_youbora objectForKey:@"program"];
+    }
+
+    if ([self->_youbora objectForKey:@"seasonName"]) {
+      options.customDimension6 = [self->_youbora objectForKey:@"seasonName"];
     }
 
     options.offline = false;
@@ -1861,6 +1879,13 @@ static int const RCTVideoUnset = -1;
 - (void)removeFromSuperview
 {
   [_player pause];
+
+  if (self->plugin != nil) {
+    [self->plugin fireStop];
+    [self->plugin removeAdapter];
+    [self->plugin removeAdsAdapter];
+  }
+
   if (_playbackRateObserverRegistered) {
     [_player removeObserver:self forKeyPath:playbackRate context:nil];
     _playbackRateObserverRegistered = NO;

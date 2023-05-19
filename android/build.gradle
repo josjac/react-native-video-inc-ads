@@ -53,6 +53,7 @@ dependencies {
     // youbora
     implementation 'com.nicepeopleatwork:configutil:0.4.7'
     implementation "com.nicepeopleatwork:exoplayer-adapter:6.7.23"
+    implementation "com.nicepeopleatwork:ima-adapter:6.7.+"
 
     // kantar
     // instalar libreria a nivel de proyecto
