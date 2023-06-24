@@ -530,7 +530,7 @@ class ReactExoplayerView extends FrameLayout implements
                             int errorStringId = Util.SDK_INT < 18 ? R.string.error_drm_not_supported
                                     : (e.reason == UnsupportedDrmException.REASON_UNSUPPORTED_SCHEME
                                     ? R.string.error_drm_unsupported_scheme : R.string.error_drm_unknown);
-                            eventEmitter.error(getResources().getString(errorStringId), e);
+                            eventEmitterError(getResources().getString(errorStringId), e);
                             return;
                         }
                     }
@@ -1078,7 +1078,7 @@ class ReactExoplayerView extends FrameLayout implements
         else if (e.type == ExoPlaybackException.TYPE_SOURCE) {
             errorString = getResources().getString(R.string.unrecognized_media_format);
         }
-        eventEmitter.error(errorString, ex);
+        eventEmitterError(errorString, ex);
         playerNeedsSource = true;
 
         if (e.type != ExoPlaybackException.TYPE_SOURCE) {
@@ -1481,7 +1481,7 @@ class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onDrmSessionManagerError(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId, Exception e) {
         Log.d("DRM Info", "onDrmSessionManagerError");
-        eventEmitter.error("onDrmSessionManagerError", e);
+        eventEmitterError("onDrmSessionManagerError", e);
     }
 
     @Override
@@ -1690,5 +1690,10 @@ class ReactExoplayerView extends FrameLayout implements
         } else {
             Log.d("KantarSpring", "kantarStop: no stream");
         }
+    }
+
+    private void eventEmitterError(String message, Exception error) {
+      eventEmitter.error(message, error);
+      youboraPlugin.fireError(error.getLocalizedMessage(), message, "");
     }
 }

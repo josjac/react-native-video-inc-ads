@@ -1007,12 +1007,12 @@ static int const RCTVideoUnset = -1;
     // When the SDK notifies us that ads have been loaded, play them.
     [adsManager start];
   }
-    if (self.onReceiveAdEvent) {
-        NSString *type = [RCTVideo convertEventToString: event.type];
-        self.onReceiveAdEvent(@{@"event": type,
-                                 @"target": self.reactTag
-                               });
-    }
+  if (self.onReceiveAdEvent) {
+    NSString *type = [RCTVideo convertEventToString: event.type];
+    self.onReceiveAdEvent(@{@"event": type,
+                           @"target": self.reactTag
+                         });
+  }
 }
 
 - (void)adsManager:(IMAAdsManager *)adsManager didReceiveAdError:(IMAAdError *)error {
@@ -1994,6 +1994,9 @@ static int const RCTVideoUnset = -1;
   if (_loadingRequest && error != nil) {
     NSError *licenseError = error;
     [_loadingRequest finishLoadingWithError:licenseError];
+    if (self->plugin != nil) {
+      [self->plugin fireFatalErrorWithMessage:[error localizedDescription] == nil ? @"" : [error localizedDescription] code:[[NSNumber numberWithInteger: error.code] stringValue] andErrorMetadata:[error localizedFailureReason] == nil ? @"" : [error localizedFailureReason] andException:nil];
+    }
     if (self.onVideoError) {
       self.onVideoError(@{@"error": @{@"code": [NSNumber numberWithInteger: error.code],
                                       @"localizedDescription": [error localizedDescription] == nil ? @"" : [error localizedDescription],
@@ -2296,6 +2299,7 @@ didCancelLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest {
     self.onRestoreUserInterfaceForPictureInPictureStop(@{});
   }
   _restoreUserInterfaceForPIPStopCompletionHandler = completionHandler;
+  [self setRestoreUserInterfaceForPIPStopCompletionHandler:true];
 }
 #endif
 
