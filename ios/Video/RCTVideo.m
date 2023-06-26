@@ -97,6 +97,7 @@ static int const RCTVideoUnset = -1;
   NSString * _adTagUrl;
   BOOL _filterEnabled;
   UIViewController * _presentingViewController;
+  BOOL _isPlayAds;
 #if __has_include(<react-native-video/RCTVideoCache.h>)
   RCTVideoCache * _videoCache;
 #endif
@@ -158,6 +159,11 @@ static int const RCTVideoUnset = -1;
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(audioRouteChanged:)
                                                  name:AVAudioSessionRouteChangeNotification
+                                               object:nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationDidBecomeActive:)
+                                                 name:UIApplicationDidBecomeActiveNotification
                                                object:nil];
   }
 
@@ -992,9 +998,11 @@ static int const RCTVideoUnset = -1;
 
   // Initialize the ads manager.
   [self.adsManager initializeWithAdsRenderingSettings:adsRenderingSettings];
+  _isPlayAds = true;
 }
 
 - (void)adsLoader:(IMAAdsLoader *)loader failedWithErrorData:(IMAAdLoadingErrorData *)adErrorData {
+  _isPlayAds = false;
   // Something went wrong loading ads. Log the error and play the content.
   NSLog(@"Error loading ads: %@", adErrorData.adError.message);
   [_player play];
@@ -1004,6 +1012,7 @@ static int const RCTVideoUnset = -1;
 
 - (void)adsManager:(IMAAdsManager *)adsManager didReceiveAdEvent:(IMAAdEvent *)event {
   if (event.type == kIMAAdEvent_LOADED) {
+    _isPlayAds = true;
     // When the SDK notifies us that ads have been loaded, play them.
     [adsManager start];
   }
@@ -1016,6 +1025,7 @@ static int const RCTVideoUnset = -1;
 }
 
 - (void)adsManager:(IMAAdsManager *)adsManager didReceiveAdError:(IMAAdError *)error {
+  _isPlayAds = false;
   // Something went wrong with the ads manager after ads were loaded. Log the error and play the
   // content.
   NSLog(@"AdsManager error: %@", error.message);
@@ -1023,11 +1033,13 @@ static int const RCTVideoUnset = -1;
 }
 
 - (void)adsManagerDidRequestContentPause:(IMAAdsManager *)adsManager {
+  _isPlayAds = true;
   // The SDK is going to play ads, so pause the content.
   [_player pause];
 }
 
 - (void)adsManagerDidRequestContentResume:(IMAAdsManager *)adsManager {
+  _isPlayAds = false;
   // The SDK is done playing ads (at least for now), so resume the content.
   [_player play];
 }
@@ -2262,6 +2274,28 @@ didCancelLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest {
   }
   return nil;
 }
+
+- (BOOL)isPlayingAd {
+    // Verifica aquí si se está reproduciendo un anuncio utilizando el SDK de IMA y AVPlayer.
+    // Puedes usar las propiedades y métodos proporcionados por el SDK de IMA para verificar el estado del anuncio.
+    // Por ejemplo, si estás utilizando IMAAdsManager, podrías verificar si adsManager.adPlaybackInfo.isPlayingAd es verdadero.
+    // Si estás utilizando otras clases o métodos para la reproducción de anuncios, ajusta esta lógica en consecuencia.
+    if (_isPlayAds == true) {
+      return true;
+    } else {
+      return false;
+    }
+}
+
+- (void)applicationDidBecomeActive:(NSNotification *)notification {
+    // Verifica si deseas iniciar la reproducción automáticamente o no
+    if ([self isPlayingAd]) {
+      [_player pause]; // Pausa el reproductor
+      if (self.adsManager != nil) {
+        [self.adsManager resume];
+      }
+    }
+}
 #pragma mark - Picture in Picture
 
 #if TARGET_OS_IOS
@@ -2286,7 +2320,9 @@ didCancelLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest {
 }
 
 - (void)pictureInPictureControllerWillStartPictureInPicture:(AVPictureInPictureController *)pictureInPictureController {
-
+  if ([self isPlayingAd]) {
+    [pictureInPictureController stopPictureInPicture]; // Detiene el modo PIP
+  }
 }
 
 - (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController failedToStartPictureInPictureWithError:(NSError *)error {
@@ -2297,6 +2333,12 @@ didCancelLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest {
   NSAssert(_restoreUserInterfaceForPIPStopCompletionHandler == NULL, @"restoreUserInterfaceForPIPStopCompletionHandler was not called after picture in picture was exited.");
   if (self.onRestoreUserInterfaceForPictureInPictureStop) {
     self.onRestoreUserInterfaceForPictureInPictureStop(@{});
+  }
+  if ([self isPlayingAd]) {
+    [_player pause];
+    if (self.adsManager != nil) {
+      [self.adsManager start];
+    }
   }
   _restoreUserInterfaceForPIPStopCompletionHandler = completionHandler;
   [self setRestoreUserInterfaceForPIPStopCompletionHandler:true];
