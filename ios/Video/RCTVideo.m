@@ -432,6 +432,9 @@ static int const RCTVideoUnset = -1;
       }
 
       if (self->plugin != nil) {
+        [self->plugin setAdsAdapter:[[YBAVPlayerAdapter alloc] initWithPlayer:self->_player]];
+
+        /*
         [self->plugin setAdapter:[[YBAVPlayerAdapter alloc] initWithPlayer:_player]];
         [self->plugin setAdsAdapter:[[YBIMAAdapter alloc] initWithPlayer:self.adsManager]];
         [self->plugin fireInit];
@@ -439,6 +442,7 @@ static int const RCTVideoUnset = -1;
         if (_adTagUrl != nil) {
           [self->plugin.adsAdapter fireAdInit];
         }
+        */
       }
 
       [self kantarLoad];
