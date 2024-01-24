@@ -9,6 +9,7 @@
 #import <YouboraIMAAdapter/YBIMAAdapter.h>
 #import <YouboraLib/YouboraLib.h>
 #import "KMA_SpringStreams.h"
+#import "GoogleInteractiveMediaAds/GoogleInteractiveMediaAds.h"
 
 
 static NSString *const statusKeyPath = @"status";
@@ -98,6 +99,11 @@ static int const RCTVideoUnset = -1;
   BOOL _filterEnabled;
   UIViewController * _presentingViewController;
   BOOL _isPlayAds;
+  
+  IMAAVPlayerContentPlayhead *contentPlayhead;
+  IMAAdsLoader *adsLoader;
+  IMAAdsManager *adsManager;
+  
 #if __has_include(<react-native-video/RCTVideoCache.h>)
   RCTVideoCache * _videoCache;
 #endif
@@ -417,7 +423,7 @@ static int const RCTVideoUnset = -1;
       self->_player = [AVPlayer playerWithPlayerItem:self->_playerItem];
       self->_player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
 
-      self.contentPlayhead = [[IMAAVPlayerContentPlayhead alloc] initWithAVPlayer:_player];
+      self->contentPlayhead = [[IMAAVPlayerContentPlayhead alloc] initWithAVPlayer:_player];
       [self setupAdsLoader];
 
       [self->_player addObserver:self forKeyPath:playbackRate options:0 context:nil];
@@ -965,52 +971,59 @@ static int const RCTVideoUnset = -1;
 }
 
 - (void)setupAdsLoader {
+  NSLog(@"VIDEO-IMA setupAdsLoader");
   // Re-use this IMAAdsLoader instance for the entire lifecycle of your app.
-  self.adsLoader = [[IMAAdsLoader alloc] initWithSettings:nil];
+  self->adsLoader = [[IMAAdsLoader alloc] initWithSettings:nil];
   // NOTE: This line will cause a warning until the next step, "Get the Ads Manager".
-  self.adsLoader.delegate = self;
+  self->adsLoader.delegate = self;
 }
 
 - (void)requestAds {
   // Create an ad display container for ad rendering.
   IMAAdDisplayContainer *adDisplayContainer =
-      [[IMAAdDisplayContainer alloc] initWithAdContainer:self companionSlots:nil];
+    [[IMAAdDisplayContainer alloc] initWithAdContainer:self
+                                        viewController: [self reactViewController]
+                                        companionSlots: nil];
+
   // Create an ad request with our ad tag, display container, and optional user context.
   IMAAdsRequest *request = [[IMAAdsRequest alloc] initWithAdTagUrl:_adTagUrl
                                                 adDisplayContainer:adDisplayContainer
-                                                   contentPlayhead:self.contentPlayhead
+                                                   contentPlayhead:self->contentPlayhead
                                                        userContext:nil];
-  [self.adsLoader requestAdsWithRequest:request];
+  [self->adsLoader requestAdsWithRequest:request];
+  NSLog(@"VIDEO-IMA requestAds");
 }
 
 #pragma mark AdsLoader Delegates
 
 - (void)adsLoader:(IMAAdsLoader *)loader adsLoadedWithData:(IMAAdsLoadedData *)adsLoadedData {
   // Grab the instance of the IMAAdsManager and set ourselves as the delegate.
-  self.adsManager = adsLoadedData.adsManager;
+  self->adsManager = adsLoadedData.adsManager;
 
   // NOTE: This line will cause a warning until the next step, "Display Ads".
-  self.adsManager.delegate = self;
+  self->adsManager.delegate = self;
 
   // Create ads rendering settings and tell the SDK to use the in-app browser.
   IMAAdsRenderingSettings *adsRenderingSettings = [[IMAAdsRenderingSettings alloc] init];
-  adsRenderingSettings.webOpenerPresentingController = _playerViewController;
+  adsRenderingSettings.linkOpenerPresentingController = _playerViewController;
 
   // Initialize the ads manager.
-  [self.adsManager initializeWithAdsRenderingSettings:adsRenderingSettings];
+  [self->adsManager initializeWithAdsRenderingSettings:adsRenderingSettings];
   _isPlayAds = true;
+  NSLog(@"VIDEO-IMA adsLoader adsLoadedData");
 }
 
 - (void)adsLoader:(IMAAdsLoader *)loader failedWithErrorData:(IMAAdLoadingErrorData *)adErrorData {
   _isPlayAds = false;
   // Something went wrong loading ads. Log the error and play the content.
-  NSLog(@"Error loading ads: %@", adErrorData.adError.message);
+  NSLog(@"VIDEO-IMA Error loading ads: %@", adErrorData.adError.message);
   [_player play];
 }
 
 #pragma mark AdsManager Delegates
 
 - (void)adsManager:(IMAAdsManager *)adsManager didReceiveAdEvent:(IMAAdEvent *)event {
+  NSLog(@"VIDEO-IMA adsManager");
   if (event.type == kIMAAdEvent_LOADED) {
     _isPlayAds = true;
     // When the SDK notifies us that ads have been loaded, play them.
@@ -1679,8 +1692,10 @@ static int const RCTVideoUnset = -1;
 
 - (void)usePlayerViewController
 {
+  NSLog(@"VIDEO-IMA usePlayerViewController");
   if( _player )
   {
+    NSLog(@"VIDEO-IMA usePlayerViewController _player");
     if (!_playerViewController) {
       _playerViewController = [self createPlayerViewController:_player withPlayerItem:_playerItem];
     }

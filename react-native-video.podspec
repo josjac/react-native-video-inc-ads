@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target = "9.0"
 
   s.subspec "Video" do |ss|
-    ss.dependency "GoogleAds-IMA-iOS-SDK", "~> 3.9"
+    ss.dependency "GoogleAds-IMA-iOS-SDK", "~> 3.18.4"
     ss.dependency "YouboraLib", "6.3.9"
     ss.dependency "YouboraAVPlayerAdapter", "6.3.5"
     ss.dependency "YouboraIMAAdapter"
