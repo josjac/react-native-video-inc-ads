@@ -130,6 +130,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     private ExoPlayerView exoPlayerView;
     private ImaAdsLoader adsLoader;
+    private ImaAdsLoader adsLoaderYoubora;
 
     private DataSource.Factory mediaDataSourceFactory;
     private SimpleExoPlayer player;
@@ -157,6 +158,7 @@ class ReactExoplayerView extends FrameLayout implements
     private int bufferForPlaybackAfterRebufferMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS;
 
     private Plugin youboraPlugin;
+    private ImaAdapter adapterAd;
     private boolean youboraIsAdapterSet = false;
     private static final String PROP_YOUBORA_ACCOUNTCODE = "accountCode";
     private static final String PROP_YOUBORA_SRC = "src";
@@ -329,6 +331,9 @@ class ReactExoplayerView extends FrameLayout implements
     public void onHostDestroy() {
         stopPlayback();
         adsLoader.release();
+        if (adsLoaderYoubora != null) {
+          adsLoaderYoubora.release();
+        }
     }
 
     public void cleanUpResources() {
@@ -490,9 +495,12 @@ class ReactExoplayerView extends FrameLayout implements
                         adapter.setBandwidthMeter(bandwidthMeter);
 
                         if (adTagUrl != null) {
-                          ImaAdapter adapterAd = new ImaAdapter();
-                          adsLoader = new ImaAdsLoader.Builder(themedReactContext).setAdEventListener(adapterAd)
+                          adapterAd = new ImaAdapter();
+
+                          adsLoaderYoubora = new ImaAdsLoader.Builder(getContext())
+                            .setAdEventListener(adapterAd)
                             .setAdErrorListener(adapterAd).build();
+
                           youboraPlugin.setAdsAdapter(adapterAd);
                         }
 
@@ -504,6 +512,9 @@ class ReactExoplayerView extends FrameLayout implements
                     player.addListener(self);
                     player.addMetadataOutput(self);
                     adsLoader.setPlayer(player);
+                    if (adsLoaderYoubora != null) {
+                      adsLoaderYoubora.setPlayer(player);
+                    }
                     exoPlayerView.setPlayer(player);
                     audioBecomingNoisyReceiver.setListener(self);
                     bandwidthMeter.addEventListener(new Handler(), self);
@@ -669,6 +680,9 @@ class ReactExoplayerView extends FrameLayout implements
             Log.d("KantarSpring", "releasePlayer");
             kantarUnload();
             adsLoader.setPlayer(null);
+            if (adsLoaderYoubora != null) {
+              adsLoaderYoubora.setPlayer(null);
+            }
             updateResumePosition();
             player.release();
             player.removeMetadataOutput(this);
