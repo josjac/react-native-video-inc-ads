@@ -1708,6 +1708,12 @@ class ReactExoplayerView extends FrameLayout implements
 
     private void eventEmitterError(String message, Exception error) {
       eventEmitter.error(message, error);
-      youboraPlugin.fireError(error.getLocalizedMessage(), message, "");
+      if (youboraPlugin != null) {
+        try {
+          youboraPlugin.fireError(error.getLocalizedMessage(), message, "");
+        } catch (NullPointerException e) {
+          Log.e("ReactExoplayerView", "youboraPlugin.fireError fail: ", e);
+        }
+      }
     }
 }
